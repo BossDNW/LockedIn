@@ -20,6 +20,7 @@ async def register_view(request: Request):
 def signup_user(request:Request, db:SessionDep, 
     username: str = Form(),
     email: str = Form(),
+    role : str = Form(),
     password: str = Form(),
 ):
     user_repo = UserRepository(db)
