@@ -95,10 +95,30 @@ async def update_profile(
         db_user = db.exec(select(User).where(User.id == user.id)).one()
         db_user.email = email
         db.add(db_user)
-    
+
+
+    # Update username in User table if changed
     if username and username != user.username:
         db_user = db.exec(select(User).where(User.id == user.id)).one()
         db_user.username = username
+        db.add(db_user)
+    
+    #Update description in User table if changed
+    if description and description != user.description:
+        db_user = db.exec(select(User).where(User.id == user.id)).one()
+        db_user.description = description
+        db.add(db_user)
+    
+    #Update company name in User table if changed and user is company
+    if user.role == 'company' and company_name and company_name != user.name:
+        db_user = db.exec(select(User).where(User.id == user.id)).one()
+        db_user.name = company_name
+        db.add(db_user)
+    
+    #Update phone in User table if changed    
+    if phone and phone != user.phone:
+        db_user = db.exec(select(User).where(User.id == user.id)).one()
+        db_user.phone = phone
         db.add(db_user)
 
 
