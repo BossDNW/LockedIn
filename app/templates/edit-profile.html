@@ -100,6 +100,10 @@
                     <input type="text" name="location" value="{{ user.location or '' }}">
                 </div>
                 <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email or '' }}">
+                </div>
+                <div class="form-group">
                     <label>Phone</label>
                     <input type="text" name="phone" value="{{ user.phone or '' }}">
                 </div>
@@ -114,6 +118,10 @@
 
             {% else %}
                 <!-- Admin Edit Form -->
+                 <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email or '' }}">
+                </div>
                 <div class="form-group">
                     <label>Phone</label>
                     <input type="text" name="phone" value="{{ user.phone or '' }}">
