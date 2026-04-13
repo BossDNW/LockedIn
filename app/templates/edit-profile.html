@@ -77,6 +77,10 @@
             {% if user.role == 'student' %}
                 <!-- Student Edit Form -->
                 <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="username" value="{{ user.username or '' }}">
+                </div>
+                <div class="form-group">
                     <label>Email</label>
                     <input type="email" name="email" value="{{ user.email or '' }}">
                 </div>
@@ -118,7 +122,11 @@
 
             {% else %}
                 <!-- Admin Edit Form -->
-                 <div class="form-group">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="username" value="{{ user.username or '' }}">
+                </div>
+                <div class="form-group">
                     <label>Email</label>
                     <input type="email" name="email" value="{{ user.email or '' }}">
                 </div>

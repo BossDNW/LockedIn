@@ -79,6 +79,7 @@ async def update_profile(
     request: Request,
     db: SessionDep,
     user: AuthDep,
+    username: str = Form(None),
     email: str = Form(None),
     phone: str = Form(None),
     description: str = Form(None),
@@ -95,6 +96,12 @@ async def update_profile(
         db_user.email = email
         db.add(db_user)
     
+    if username and username != user.username:
+        db_user = db.exec(select(User).where(User.id == user.id)).one()
+        db_user.username = username
+        db.add(db_user)
+
+
     # Update profile based on role
     if user.role == 'student':
         profile = db.exec(select(StudentProfile).where(StudentProfile.userId == user.id)).first()
