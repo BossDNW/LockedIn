@@ -33,8 +33,11 @@ class ProgrammeBase(SQLModel):
     companyId: int = Field(index=True, foreign_key="company.id")#add foreign key
     academicYear: int = Field(index=True)
     credits: int = Field(index=True)
-    keywords: list[str] = Field(default=[])
+    keywords: str = Field(default=[])
     compensation: str = Field(index=True)
+    schedule: str = Field(index=True)
+    workSite: str = Field(index=True)
+
     
 
 class Programme(ProgrammeBase, table=True):
