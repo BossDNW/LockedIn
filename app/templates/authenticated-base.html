@@ -208,29 +208,35 @@
             margin-bottom: 0;
         }
 
-        .detail-view h3 {
-            font-weight: 600;
-            font-size: 22px;
-            margin-bottom: 0;
+        .item-content {
+            margin-bottom: 12px;
         }
 
-        .detail-view button {
-            background-color: rgb(72, 72, 72);;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 30px;
-            font-size: 14px;
-            font-weight: 500;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 2em;
         }
 
-        .detail-view button:hover {
-            background-color: rgb(53, 53, 53);
+        .pagination button {
+            padding: 6px 14px;
+            border: solid var(--border-colour) 1px;
+            border-radius: 4px;
+            background-color: white;
             cursor: pointer;
         }
 
-        .item-content {
-            margin-bottom: 12px;
+        .pagination button.active-page {
+            background-color: var(--border-colour);
+        }
+
+        .footer {
+            width: 100%;
+            background-color: rgb(82, 82, 82);
+            height: 100px;
+
         }
 
 </style>

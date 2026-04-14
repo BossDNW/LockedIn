@@ -13,13 +13,13 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
     """Display user profile based on role"""
     
     profile_data = None
-    company_data = None
+    company_data = False
     
     if user.role == 'student':
         profile_data = db.exec(select(StudentProfile).where(StudentProfile.userId == user.id)).first()
     elif user.role == 'company':
         profile_data = db.exec(select(CompanyProfile).where(CompanyProfile.userId == user.id)).first()
-        company_data = db.exec(select(Company).where(Company.id == user.id)).first()
+        company_data = True
     elif user.role == 'admin':
         profile_data = db.exec(select(AdminProfile).where(AdminProfile.userId == user.id)).first()
     
@@ -28,10 +28,9 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "username": user.username,
         "email": user.email,
         "role": user.role,
-        "name": profile_data.name if profile_data and profile_data.name else user.username,
+        "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
-        "profile_picture": profile_data.profilePicture if profile_data and profile_data.profilePicture else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -62,10 +61,9 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "username": user.username,
         "email": user.email,
         "role": user.role,
-        "name": profile_data.name if profile_data and profile_data.name else user.username,
+        "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
-        "profile_picture": profile_data.profilePicture if profile_data and profile_data.profilePicture else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -87,17 +85,18 @@ async def update_profile(
     description: str = Form(None),
     # Company-specific fields
     location: str = Form(None),
-    website: str = Form(None),
-    profile_picture: str = Form(None)  # ← Changed to string for URL
+    website: str = Form(None)
 ):
     """Update user profile based on role"""
     
-    # Update User table (email) - applies to ALL roles
+    # Update User table (email and username) - applies to ALL roles
     db_user = db.exec(select(User).where(User.id == user.id)).one()
     
     if email and email != user.email:
         db_user.email = email
         db.add(db_user)
+    
+   
     
     # Update profile based on role
     if user.role == 'student':
@@ -109,26 +108,12 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
-            if profile_picture is not None:
-                profile.profilePicture = profile_picture if profile_picture else ""
-            db.add(profile)
-        else:
-            # Create profile if doesn't exist
-            profile = StudentProfile(
-                userId=user.id,
-                name=username or user.username,
-                contact=phone or "",
-                bio=description or "",
-                profilePicture=profile_picture or "",
-                resume=""
-            )
             db.add(profile)
             
     elif user.role == 'company':
         # Update CompanyProfile
         profile = db.exec(select(CompanyProfile).where(CompanyProfile.userId == user.id)).first()
         company = db.exec(select(Company).where(Company.id == user.id)).first()
-        
         if profile:
             if location is not None:
                 profile.location = location if location else ""
@@ -140,29 +125,14 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
-            if profile_picture is not None:
-                profile.profilePicture = profile_picture if profile_picture else ""
-            db.add(profile)
-        else:
-            # Create profile if doesn't exist
-            profile = CompanyProfile(
-                userId=user.id,
-                name=username or user.username,
-                contact=phone or "",
-                bio=description or "",
-                profilePicture=profile_picture or "",
-                location=location or "",
-                website=website or ""
-            )
             db.add(profile)
       
-        if company:
-            if username:
-                company.name = username
+            if company:
+                company.name = username if username else ""
                 db.add(company)
-        else:
-            new_company = Company(id=user.id, name=username or user.username)
-            db.add(new_company)
+            else:
+                new_company = Company(id=user.id, name=username)
+                db.add(new_company)
             
     elif user.role == 'admin':
         profile = db.exec(select(AdminProfile).where(AdminProfile.userId == user.id)).first()
@@ -173,18 +143,6 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
-            if profile_picture is not None:
-                profile.profilePicture = profile_picture if profile_picture else ""
-            db.add(profile)
-        else:
-            # Create profile if doesn't exist
-            profile = AdminProfile(
-                userId=user.id,
-                name=username or user.username,
-                contact=phone or "",
-                bio=description or "",
-                profilePicture=profile_picture or ""
-            )
             db.add(profile)
     
     db.commit()

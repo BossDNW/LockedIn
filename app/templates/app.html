@@ -170,21 +170,12 @@
             document.getElementById('applications-tbody').innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading applications</td></tr>';
         }
     }
-
-    function renderDetail(item) {
-        detailView.innerHTML = `
-            <div class="detail-view">
-                <h2>${item.programme_title}</h2>
-                <p>${item.company_name}, ${item.company_location}</p>
-                <span>${item.academic_year}</span>
-                <span>${item.field}</span>
-                <span>${item.credits}</span><br>
-                <h3>Position Overview</h3>
-                <h3>Responsibilites</h3>
-                <h3>Requirements</h3>
-                <button>Apply Now</button>
-            </div>
-        `;
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     loadMyApplications();

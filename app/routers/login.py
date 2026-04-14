@@ -29,7 +29,9 @@ async def login_action_ajax(
         flash(request, "Incorrect username or password", "danger")
         return RedirectResponse(url=request.url_for("login_view"), status_code=status.HTTP_303_SEE_OTHER)
     
-    response = RedirectResponse(url=request.url_for("profile_page"), status_code=status.HTTP_303_SEE_OTHER)
+    user = user_repo.get_by_username(username)
+    
+    response = RedirectResponse(url=request.url_for("index_view"), status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
         key="access_token",
         value=access_token,

@@ -34,13 +34,7 @@ class ProgrammeBase(SQLModel):
     compensation: str = Field(index=True)
     schedule: str = Field(index=True)
     workSite: str = Field(index=True)
-    description: str = Field(default="")  # Added description field
-    responsibilities: str = Field(default="")  # Added responsibilities field
-    requirements: str = Field(default="")  # Added requirements field
-    numberOfPositions: int = Field(index=True)
-    hours: str = Field(index=True)
-    days: str = Field(index=True)
-    field: str = Field(index=True)
+    description: str = Field(default="")
 
 class Programme(ProgrammeBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
