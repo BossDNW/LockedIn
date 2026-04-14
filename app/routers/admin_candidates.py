@@ -9,7 +9,6 @@ from app.models.user import Application, User, Programme, Company
 
 router = APIRouter(tags=["Admin Candidates"])
 
-# HTML PAGE - Admin view all candidates
 @router.get("/admin/candidates", response_class=HTMLResponse)
 async def admin_candidates_page(request: Request, user: AdminDep):
     """Render the admin candidates page - ONLY ADMINS CAN ACCESS"""
@@ -19,7 +18,6 @@ async def admin_candidates_page(request: Request, user: AdminDep):
         context={"user": user}
     )
 
-# API - Get all applications for admin
 @router.get("/api/admin/candidates")
 async def get_admin_candidates(
     db: SessionDep,
@@ -30,9 +28,6 @@ async def get_admin_candidates(
     limit: int = Query(default=10, ge=1, le=50)
 ):
     """Get all applications for admin to review"""
-    if user.role != 'admin':
-        raise HTTPException(status_code=403, detail="Access denied")
-    
     offset = (page - 1) * limit
     
     query = (
@@ -48,13 +43,11 @@ async def get_admin_candidates(
     if programme_id:
         query = query.where(Application.programmeId == programme_id)
     
-    # Get total count
     count_query = select(func.count()).select_from(query.subquery())
     total_count = db.exec(count_query).one()
     
     applications = db.exec(query.offset(offset).limit(limit).order_by(Application.id.desc())).all()
     
-    # Get all programmes for filter dropdown
     all_programmes = db.exec(select(Programme, Company).join(Company)).all()
     
     results = []
@@ -82,7 +75,6 @@ async def get_admin_candidates(
         }
     }
 
-# API - Admin shortlists a student
 @router.put("/api/admin/candidates/{application_id}/shortlist")
 async def admin_shortlist_candidate(
     db: SessionDep,
@@ -90,9 +82,6 @@ async def admin_shortlist_candidate(
     application_id: int
 ):
     """Admin shortlists a student - moves from pending to shortlisted"""
-    if user.role != 'admin':
-        raise HTTPException(status_code=403, detail="Access denied")
-    
     application = db.get(Application, application_id)
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
