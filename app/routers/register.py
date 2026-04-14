@@ -39,6 +39,8 @@ def signup_user(request:Request, db:SessionDep,
                 )
             profile_dict = profile_base.model_dump()
             if role == 'company':
+                profile_dict["location"] = ""
+                profile_dict["website"] = ""
                 comp_profile = CompanyProfile.model_validate(profile_dict)
                 db.add(comp_profile)
                 db.commit()
