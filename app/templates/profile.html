@@ -51,8 +51,8 @@
     <div class="profile-card">
         {% if user.role == 'student' %}
             <!-- Student Profile -->
-            <div class="profile-name">{{ user.username }}</div>
-            <div class="profile-info">{{ user.email }} | {{ user.phone or 'Not provided' }}</div>
+            <div class="profile-name">{{ user.name }} (@{{ user.username }})</div>
+            <div class="profile-info">{{ user.email }} | {{ user.phone or 'Not provided' }} | Profile Type: {{ user.role }}</div>
             <div class="description">
                 {{ user.description or 'No description provided.' }}
             </div>
@@ -85,7 +85,7 @@
         {% else %}
             <!-- Admin Profile -->
             <div class="profile-name">{{ user.username }} (Admin)</div>
-            <div class="profile-info">{{ user.email or 'Not provided' }} | {{ user.phone or 'Not provided' }}</div>
+            <div class="profile-info">{{ user.email or 'Not provided' }} | {{ user.phone or 'Not provided' }} | Profile Type: {{ user.role }}</div>
             <div class="description">
                 {{ user.description or 'No description provided.' }}
             </div>

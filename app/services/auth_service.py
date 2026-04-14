@@ -23,4 +23,5 @@ class AuthService:
             role=role
         )
         new_user = User.model_validate(new_user_base)
+        
         return self.user_repo.create(new_user)
