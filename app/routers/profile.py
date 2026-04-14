@@ -5,6 +5,10 @@ from app.dependencies.session import SessionDep
 from app.models.user import User, StudentProfile, CompanyProfile, AdminProfile, Company
 from app.dependencies.auth import AuthDep
 from . import templates
+import shutil
+import os
+from fastapi import UploadFile, File
+from datetime import datetime
 
 router = APIRouter(tags=["Profile"])
 
@@ -31,6 +35,7 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
+        "profile_picture": profile_data.profilePicture if profile_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -64,6 +69,7 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
+        "profile_picture": profile_data.profilePicture if profile_data and profile_data.profilePicture else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -85,7 +91,8 @@ async def update_profile(
     description: str = Form(None),
     # Company-specific fields
     location: str = Form(None),
-    website: str = Form(None)
+    website: str = Form(None),
+    profile_picture: str = Form(None)  
 ):
     """Update user profile based on role"""
     
@@ -108,6 +115,8 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
+            if profile_picture is not None:
+                profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
             
     elif user.role == 'company':
@@ -125,6 +134,8 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
+            if profile_picture is not None:
+                profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
       
             if company:
@@ -143,6 +154,8 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
+            if profile_picture is not None:
+                profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
     
     db.commit()
