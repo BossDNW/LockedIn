@@ -1,3 +1,4 @@
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 {% extends "authenticated-base.html" %}
 {% block title %}Post a New Programme{% endblock %}
 
@@ -217,6 +218,9 @@
 {% endblock %}
 
 {% block subpage_content %}
+{% for message in get_flashed_messages(request) %}
+        <div class="alert alert-{{ message.type }}" role="alert">{{ message.message }}</div>
+    {% endfor %}
 <div class="page-content">
     <div class="form-container">
         <h1 class="form-title">Post a New Programme</h1>
@@ -244,13 +248,13 @@
                 <h3>Programme Details</h3>
                 
                 <div class="form-group">
-                    <label for="field">Year of Study *</label>
-                    <select id="field" name="field" required>
+                    <label for="year_of_study">Year of Study *</label>
+                    <select id="year_of_study" name="year_of_study" required>
                         <option value="">Select Year</option>
-                        <option value="First Year">First Year</option>
-                        <option value="Second Year">Second Year</option>
-                        <option value="Third Year">Third Year</option>
-                        <option value="Fourth Year">Fourth Year</option>
+                        <option value="1">First Year</option>
+                        <option value="2">Second Year</option>
+                        <option value="3">Third Year</option>
+                        <option value="4">Fourth Year</option>
                     </select>
                 </div>
 
@@ -380,6 +384,7 @@
             </div>
         </form>
     </div>
+    
 </div>
 
 <script>
