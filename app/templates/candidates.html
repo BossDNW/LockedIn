@@ -1,0 +1,333 @@
+{% extends "authenticated-base.html" %}
+
+{% block title %}My Candidates{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .candidates-container {
+        margin-top: 20px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #1565c0, #0d47a1);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .stat-card h3 {
+        font-size: 32px;
+        margin: 0 0 8px 0;
+    }
+    
+    .filter-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .filter-select {
+        padding: 10px 16px;
+        border: solid var(--border-colour) 1px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        background-color: white;
+    }
+    
+    .refresh-btn {
+        padding: 10px 16px;
+        background-color: #1565c0;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+    
+    .candidates-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .candidates-table th, .candidates-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-colour);
+    }
+    
+    .candidates-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-shortlisted {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+    
+    .status-accepted {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-rejected {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    
+    .status-waitlisted {
+        background-color: #fff3e0;
+        color: #ed6c02;
+    }
+    
+    .action-select {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: solid var(--border-colour) 1px;
+        cursor: pointer;
+        font-size: 12px;
+        background-color: white;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 30px;
+    }
+    
+    .pagination button {
+        padding: 8px 16px;
+        border: solid var(--border-colour) 1px;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .pagination button.active {
+        background: #1565c0;
+        color: white;
+    }
+    
+    .info-message {
+        background-color: #e3f2fd;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        color: #1565c0;
+    }
+</style>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="page-content">
+    <div class="candidates-container">
+        <h1>My Candidates</h1>
+        
+        <div class="info-message">
+            ℹ️ Only students shortlisted by the admin appear here. You can accept, reject, or waitlist them.
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="shortlistedCount">0</h3>
+                <p>Shortlisted</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="acceptedCount">0</h3>
+                <p>Accepted</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="pendingActions">0</h3>
+                <p>Pending Action</p>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <select id="status-filter" class="filter-select">
+                <option value="all">All Candidates</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+                <option value="waitlisted">Waitlisted</option>
+            </select>
+            <button class="refresh-btn" onclick="loadCandidates(1)">Refresh</button>
+        </div>
+        
+        <table class="candidates-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Programme</th>
+                    <th>Status</th>
+                    <th>Decision</th>
+                </tr>
+            </thead>
+            <tbody id="candidates-tbody">
+                <tr><td colspan="5" style="text-align: center;">Loading...</td\(�
+            </tbody>
+         licensierad
+        
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.style.backgroundColor = isError ? '#f44336' : '#4caf50';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.color = 'white';
+        toast.style.padding = '12px 24px';
+        toast.style.borderRadius = '8px';
+        toast.style.zIndex = '1000';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    async function loadCandidates(page = 1) {
+        const status = document.getElementById('status-filter').value;
+        const statusParam = status !== 'all' ? `&status=${status}` : '';
+        
+        try {
+            const response = await fetch(`/api/candidates?page=${page}&limit=10${statusParam}`);
+            const data = await response.json();
+            
+            currentPage = data.pagination.current_page;
+            totalPages = data.pagination.total_pages;
+            
+            const shortlisted = data.data.filter(c => c.status === 'shortlisted').length;
+            const accepted = data.data.filter(c => c.status === 'accepted').length;
+            const pendingActions = data.data.filter(c => c.status === 'shortlisted').length;
+            
+            document.getElementById('shortlistedCount').textContent = shortlisted;
+            document.getElementById('acceptedCount').textContent = accepted;
+            document.getElementById('pendingActions').textContent = pendingActions;
+            
+            const tbody = document.getElementById('candidates-tbody');
+            if (data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No candidates found. Wait for admin to shortlist students.</td\(�';
+            } else {
+                tbody.innerHTML = data.data.map(candidate => `
+                    <tr>
+                        <td>${escapeHtml(candidate.student_name)}</td>
+                        <td>${escapeHtml(candidate.student_email)}</td>
+                        <td>${escapeHtml(candidate.programme_title)}</td>
+                        <td><span class="status-badge status-${candidate.status}">${candidate.status}</span></td>
+                        <td>
+                            ${candidate.status === 'shortlisted' ? 
+                                `<select class="action-select" onchange="updateStatus(${candidate.application_id}, this.value, this)">
+                                    <option value="">Select Action</option>
+                                    <option value="accepted">✅ Accept</option>
+                                    <option value="rejected">❌ Reject</option>
+                                    <option value="waitlisted">⏳ Waitlist</option>
+                                </select>` : 
+                                `<span style="color: #666;">Decision made</span>`
+                            }
+                          </td>
+                    </tr>
+                `).join('');
+            }
+            
+            updatePagination(data.pagination);
+        } catch (error) {
+            console.error('Error loading candidates:', error);
+        }
+    }
+    
+    async function updateStatus(applicationId, newStatus, selectElement) {
+        if (!newStatus) return;
+        
+        selectElement.disabled = true;
+        
+        try {
+            const response = await fetch(`/api/candidates/${applicationId}/status?status=${newStatus}`, {
+                method: 'PUT'
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                showToast(`Candidate ${result.status}!`);
+                loadCandidates(currentPage);
+            } else {
+                const error = await response.json();
+                showToast(error.detail || 'Failed to update status', true);
+                selectElement.disabled = false;
+                selectElement.value = '';
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showToast('An error occurred', true);
+            selectElement.disabled = false;
+            selectElement.value = '';
+        }
+    }
+    
+    function updatePagination(pagination) {
+        const container = document.getElementById('pagination');
+        if (!container) return;
+        
+        let html = '';
+        
+        if (pagination.has_prev) {
+            html += `<button onclick="loadCandidates(${pagination.prev_page})">← Previous</button>`;
+        } else {
+            html += `<button disabled>← Previous</button>`;
+        }
+        
+        for (let i = 1; i <= pagination.total_pages; i++) {
+            if (i === pagination.current_page) {
+                html += `<button class="active" disabled>${i}</button>`;
+            } else if (Math.abs(i - pagination.current_page) <= 2 || i === 1 || i === pagination.total_pages) {
+                html += `<button onclick="loadCandidates(${i})">${i}</button>`;
+            }
+        }
+        
+        if (pagination.has_next) {
+            html += `<button onclick="loadCandidates(${pagination.next_page})">Next →</button>`;
+        } else {
+            html += `<button disabled>Next →</button>`;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    document.getElementById('status-filter').addEventListener('change', () => loadCandidates(1));
+    
+    loadCandidates(1);
+</script>
+{% endblock %}
