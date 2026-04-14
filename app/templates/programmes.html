@@ -1,52 +1,115 @@
 {% extends "authenticated-base.html" %}
 {% block title %}Programmes{% endblock %}
 
-{% block external_js %}
-{% endblock %}
-
 {% block subpage_content %}
 <div class="page-content">
     <div class="search">
-        <input class="search-bar" type="text" placeholder="Programmes title or company name">
-        
-        <div class="search-filters">
-            <button>Academic Year</button>
-            <button>Field</button>
-            <button>Credits</button>
-        </div>
+        <form method="get" action="/programmes" class="search-form">
+            <input class="search-bar" type="text" name="search" placeholder="Programmes title or company name" value="{{ search_term }}">
+            
+            <div class="search-filters">
+                <select name="year" class="filter-select">
+                    <option value="">All Years</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select name="field" class="filter-select">
+                    <option value="">All Fields</option>
+                    {% for field in fields %}
+                    <option value="{{ field }}" {% if selected_field == field %}selected{% endif %}>{{ field }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select name="credits" class="filter-select">
+                    <option value="">All Credits</option>
+                    {% for credit in credits_list %}
+                    <option value="{{ credit }}" {% if selected_credits == credit %}selected{% endif %}>{{ credit }} Credits</option>
+                    {% endfor %}
+                </select>
+                
+                <button type="submit" class="filter-btn">Apply Filters</button>
+                <a href="/programmes" class="clear-btn">Clear</a>
+            </div>
+        </form>
     </div>
 
     <div class="master-detail">
-        <div class="master" id="master">
+        <div class="master">
             {% for programme in programmes %}
-            <div class="master-item {% if loop.first %}active{% endif %}" 
-                 onclick="window.location.href='?id={{ programme.id }}'">
-                <div class="item-content">
-                    <h2>{{ programme.programme_title }}</h2>
-                    <p>{{ programme.company_name }}, {{ programme.company_location }}</p>
-                    <span>{{ programme.academic_year }}</span>
-                    <span>{{ programme.field }}</span>
-                    <span>{{ programme.credits }}</span>
-                </div>
+            <div class="master-item {% if selected_programme and selected_programme.id == programme.id %}active{% endif %}">
+                <a href="?id={{ programme.id }}{% if search_term %}&search={{ search_term }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_field %}&field={{ selected_field }}{% endif %}{% if selected_credits %}&credits={{ selected_credits }}{% endif %}" 
+                   class="master-link">
+                    <div class="item-content">
+                        <h2>{{ programme.programme_title }}</h2>
+                        <p>{{ programme.company_name }}, {{ programme.company_location }}</p>
+                        <div class="tags">
+                            <span>📅 {{ programme.academic_year }}</span>
+                            <span>🎓 {{ programme.field }}</span>
+                            <span>⭐ {{ programme.credits }} credits</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="no-results">
+                <p>No programmes found matching your criteria.</p>
             </div>
             {% endfor %}
         </div>
         
-        <div class="detail" id="detail">
+        <div class="detail">
             {% if selected_programme %}
             <div class="detail-view">
                 <h2>{{ selected_programme.programme_title }}</h2>
-                <p>{{ selected_programme.company_name }}, {{ selected_programme.company_location }}</p>
-                <span>{{ selected_programme.academic_year }}</span>
-                <span>{{ selected_programme.field }}</span>
-                <span>{{ selected_programme.credits }}</span><br>
-                <p>{{ selected_programme.description }}</p>
+                <p class="company-info">{{ selected_programme.company_name }}, {{ selected_programme.company_location }}</p>
+                
+                <div class="programme-meta">
+                    <span>📅 {{ selected_programme.academic_year }}</span>
+                    <span>🎓 {{ selected_programme.field }}</span>
+                    <span>⭐ {{ selected_programme.credits }} Credits</span>
+                    <span>💰 {{ selected_programme.compensation }}</span>
+                    <span>⏰ {{ selected_programme.schedule }}</span>
+                    <span>📍 {{ selected_programme.workSite }}</span>
+                </div>
+                
+                {% if selected_programme.keywords %}
+                <div class="keywords">
+                    <strong>Keywords:</strong>
+                    {% for keyword in selected_programme.keywords_list %}
+                    <span class="keyword">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="description">
+                    <h3>Position Overview</h3>
+                    <p>{{ selected_programme.overview or selected_programme.description }}</p>
+                    
+                    <h3>Responsibilities</h3>
+                    <p>{{ selected_programme.responsibilities or 'No specific responsibilities listed.' }}</p>
+                    
+                    <h3>Requirements</h3>
+                    <p>{{ selected_programme.requirements or 'No specific requirements listed.' }}</p>
+                </div>
                 
                 {% if user.role == 'student' %}
-                <button class="apply-btn" onclick="window.location.href='/apply/{{ selected_programme.id }}'">
-                    Apply Now
-                </button>
+                    {% if has_applied %}
+                        <button class="applied-btn" disabled>✓ Already Applied</button>
+                    {% else %}
+                        <form method="post" action="/apply/{{ selected_programme.id }}" style="display: inline;">
+                            <input type="hidden" name="redirect_url" value="{{ request.url.path }}?id={{ selected_programme.id }}">
+                            <button type="submit" class="apply-btn">Apply Now</button>
+                        </form>
+                    {% endif %}
+                {% elif user.role == 'company' and selected_programme.company_id == user.id %}
+                    <a href="/edit-programme/{{ selected_programme.id }}" class="edit-btn">Edit Programme</a>
                 {% endif %}
+            </div>
+            {% else %}
+            <div class="detail-view">
+                <p>Select a programme to view details.</p>
             </div>
             {% endif %}
         </div>
@@ -54,8 +117,81 @@
 </div>
 
 <style>
-    .master-item {
+    .search-form {
+        width: 100%;
+        display: block;
+        margin-bottom: 2em;
+        text-align: center;
+    }
+    
+    .search-bar {
+        width: min(600px, 100%);
+        border: solid rgb(156, 156, 156) 1px;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 1em;
+    }
+    
+    .search-bar:focus {
+        border: solid rgb(79, 79, 79) 1px;
+        outline: none;
+        box-shadow: 0 0 10px rgba(86, 86, 86, 0.211);
+    }
+    
+    .search-filters {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-select, .filter-btn, .clear-btn {
+        padding: 8px 16px;
+        border: solid var(--border-colour) 1px;
+        border-radius: 20px;
+        background-color: white;
         cursor: pointer;
+        font-size: 12px;
+    }
+    
+    .filter-btn {
+        background-color: rgb(82, 82, 82);
+        color: white;
+        border: none;
+    }
+    
+    .filter-btn:hover {
+        background-color: rgb(53, 53, 53);
+    }
+    
+    .clear-btn {
+        text-decoration: none;
+        color: rgb(107, 107, 107);
+        line-height: 32px;
+    }
+    
+    .clear-btn:hover {
+        color: rgb(53, 53, 53);
+    }
+    
+    .master {
+        width: 40%;
+    }
+    
+    .detail {
+        width: 60%;
+        border: solid var(--border-colour) 1px;
+        border-radius: 16px;
+        padding-left: 16px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .master-item {
+        border: solid var(--border-colour) 1px;
+        border-radius: 16px;
+        margin-bottom: 1em;
+        padding: 6px 16px;
         transition: background-color 0.3s;
     }
     
@@ -68,19 +204,129 @@
         border-left: 3px solid rgb(53, 53, 53);
     }
     
-    .apply-btn {
+    .master-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .master-item h2 {
+        font-weight: 600;
+        font-size: 18px;
+        margin-bottom: 0;
+    }
+    
+    .master-item p {
+        font-size: 12px;
+        margin: 5px 0;
+    }
+    
+    .tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 10px 0;
+    }
+    
+    .tags span, .keyword {
+        color: rgb(82, 82, 82);
+        background-color: var(--border-colour);
+        border-radius: 16px;
+        padding: 4px 12px;
+        font-size: 10px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .detail-view {
+        padding: 16px;
+    }
+    
+    .detail-view h2 {
+        font-weight: 600;
+        font-size: 26px;
+        margin-bottom: 5px;
+    }
+    
+    .company-info {
+        color: #666;
+        margin-bottom: 20px;
+    }
+    
+    .programme-meta {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .programme-meta span {
+        font-size: 14px;
+    }
+    
+    .keywords {
+        margin-bottom: 20px;
+    }
+    
+    .description h3 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+    
+    .description p {
+        line-height: 1.6;
+        color: #333;
+    }
+    
+    .apply-btn, .applied-btn, .edit-btn {
         background-color: #007bff;
         color: white;
         border: none;
-        border-radius: 4px;
-        padding: 10px 20px;
+        border-radius: 6px;
+        padding: 12px 24px;
         margin-top: 20px;
         cursor: pointer;
         font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
     }
     
     .apply-btn:hover {
         background-color: #0056b3;
+    }
+    
+    .applied-btn {
+        background-color: #28a745;
+        cursor: not-allowed;
+    }
+    
+    .edit-btn {
+        background-color: #6c757d;
+    }
+    
+    .edit-btn:hover {
+        background-color: #5a6268;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    @media (max-width: 750px) {
+        .master-detail {
+            flex-direction: column;
+        }
+        
+        .master, .detail {
+            width: 100%;
+        }
     }
 </style>
 {% endblock %}

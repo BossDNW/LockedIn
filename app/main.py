@@ -4,6 +4,9 @@ from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from app.routers import templates, static_files, router, api_router
 from app.config import get_settings
+from app.utilities.seed_db import seed_database
+from sqlmodel import Session
+from app.database import engine
 from contextlib import asynccontextmanager
 
 
@@ -11,6 +14,10 @@ from contextlib import asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.database import create_db_and_tables
     create_db_and_tables()
+
+    print("🔧 Seeding database with default users...")
+    with Session(engine) as db:
+        seed_database(db)
     yield
 
 
