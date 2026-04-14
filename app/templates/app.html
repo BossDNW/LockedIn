@@ -1,97 +1,183 @@
 {% extends "authenticated-base.html" %}
-{% block title %}Programmes{% endblock %}
+{% block title %}My Applications{% endblock %}
 
-{% block external_js %}
+{% block additional_styles %}
+<style>
+    .applications-container {
+        margin-top: 20px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #1565c0, #0d47a1);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .stat-card h3 {
+        font-size: 32px;
+        margin: 0 0 8px 0;
+    }
+    
+    .applications-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .applications-table th, .applications-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-colour);
+    }
+    
+    .applications-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background-color: #fff3e0;
+        color: #ed6c02;
+    }
+    
+    .status-shortlisted {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+    
+    .status-accepted {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-rejected {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .browse-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #1565c0;
+        text-decoration: none;
+    }
+    
+    .browse-link:hover {
+        text-decoration: underline;
+    }
+</style>
 {% endblock %}
-
 
 {% block subpage_content %}
 <div class="page-content">
-    <div class="search">
-        <input class="search-bar" type="text" placeholder="Programmes title or company name">
+    <div class="applications-container">
+        <h1>My Applications</h1>
+        <p>Track the status of your internship applications below.</p>
         
-        <div class="search-filters">
-            <button>Academic Year</button>
-            <button>Field</button>
-            <button>Credits</button>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="pendingCount">0</h3>
+                <p>Pending</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="shortlistedCount">0</h3>
+                <p>Shortlisted</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="acceptedCount">0</h3>
+                <p>Accepted</p>
+            </div>
         </div>
+        
+        <table class="applications-table">
+            <thead>
+                <tr>
+                    <th>Programme Title</th>
+                    <th>Company</th>
+                    <th>Applied Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="applications-tbody">
+                <tr><td colspan="4" style="text-align: center;">Loading...</td\(�
+            </tbody>
+        �
+        
+        <a href="/programmes" class="browse-link">← Browse More Programmes</a>
     </div>
-
-    <div class="master-detail">
-        <div class="master" id="master"></div>
-        <div class="detail" id="detail"></div>
-    </div>
-
 </div>
 
 <script>
-    const data = [
-        {id: 1, programme_title: "Internship Programme Title", company_name: "Company Name", company_location: "Location", academic_year: "Academic Year", field: "Field", credits: "Credits"},
-        {id: 2, programme_title: "Hello", company_name: "Company Name", company_location: "Location", academic_year: "Academic Year", field: "Field", credits: "Credits"},
-        {id: 3, programme_title: "Internship Programme Title", company_name: "Apple", company_location: "Location", academic_year: "Academic Year", field: "Field", credits: "Credits"},
-        {id: 4, programme_title: "Internship Programme Title", company_name: "Company Name", company_location: "Location", academic_year: "Academic Year", field: "Field", credits: "Credits"},
-        {id: 5, programme_title: "Internship Programme Title", company_name: "Company Name", company_location: "Location", academic_year: "Academic Year", field: "Field", credits: "Credits"}
-    ];
-    const masterList = document.getElementById("master");
-    const detailView = document.getElementById("detail");
-
-    function renderList() {
-        masterList.innerHTML = "";
-  
-        for (let i=0; i<data.length; i++) {
-            let item = data[i];
-            let div = document.createElement("div");
-
-            div.className = "master-item";
-            div.innerHTML = `
-                <div class="item-content">
-                    <h2>${item.programme_title}</h2>
-                    <p>${item.company_name}, ${item.company_location}</p>
-                    <span>${item.academic_year}</span>
-                    <span>${item.field}</span>
-                    <span>${item.credits}</span>
-                </div>
-            `;
-            div.onclick = function () {
-                let allItems = document.querySelectorAll(".master-item");
-                for (let j=0; j<allItems.length; j++) {
-                    allItems[j].classList.remove("active");
-                }
-
-                this.classList.add("active");
-                renderDetail(item);
+    async function loadMyApplications() {
+        try {
+            const response = await fetch('/api/my-applications');
+            const applications = await response.json();
+            
+            const stats = {
+                pending: 0,
+                shortlisted: 0,
+                accepted: 0
+            };
+            
+            const tbody = document.getElementById('applications-tbody');
+            if (applications.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">You haven\'t applied to any programmes yet.<br><a href="/programmes" style="color: #1565c0;">Browse Programmes →</a></td></tr>';
+            } else {
+                tbody.innerHTML = applications.map(app => {
+                    if (app.status === 'pending') stats.pending++;
+                    if (app.status === 'shortlisted') stats.shortlisted++;
+                    if (app.status === 'accepted') stats.accepted++;
+                    
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(app.programme_title)}</strong></td>
+                            <td>${escapeHtml(app.company_name)}</td>
+                            <td>${new Date(app.applied_date).toLocaleDateString() || 'N/A'}</td>
+                            <td><span class="status-badge status-${app.status}">${app.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
             }
-            masterList.appendChild(div);
+            
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('shortlistedCount').textContent = stats.shortlisted;
+            document.getElementById('acceptedCount').textContent = stats.accepted;
+            
+        } catch (error) {
+            console.error('Error loading applications:', error);
+            document.getElementById('applications-tbody').innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading applications</td></tr>';
         }
-
     }
-
-    function renderDetail(item) {
-        detailView.innerHTML = `
-            <div class="detail-view">
-                <h2>${item.programme_title}</h2>
-                <p>${item.company_name}, ${item.company_location}</p>
-                <span>${item.academic_year}</span>
-                <span>${item.field}</span>
-                <span>${item.credits}</span><br>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce quis nisl eu mauris vehicula ornare a a dui. Morbi elementum sem nec tortor sagittis pretium. Curabitur pellentesque ullamcorper lacus, ut tempor purus pretium sed. Fusce gravida augue augue, quis vehicula massa commodo quis. Aliquam a dictum ipsum. Ut faucibus magna sapien, finibus pharetra tellus vehicula in. Nam non nunc posuere, faucibus sem ultricies, feugiat augue. Nullam sed placerat tellus, et vehicula quam. Nulla faucibus in purus quis aliquet. Aliquam vitae arcu id nunc tempor pellentesque id non nisi. Vivamus consectetur, ex vehicula finibus interdum, diam nunc vehicula justo, at tristique libero lectus nec felis. Proin est ante, tincidunt sit amet quam eu, semper dictum nunc. Fusce tristique, libero et ultrices euismod, mauris tellus condimentum purus, ut sollicitudin mi ex rhoncus erat. Pellentesque interdum, sapien ac posuere vehicula, mauris tortor posuere purus, sit amet fermentum nulla risus sit amet velit. Nulla id purus enim.
-
-Suspendisse tristique tellus eget nisi lacinia, ut cursus lacus tristique. Sed turpis sapien, aliquam a arcu et, porttitor pulvinar justo. Sed faucibus justo diam, vel dignissim mi pulvinar sit amet. Integer eros ante, condimentum sit amet sapien nec, scelerisque rutrum sapien. Proin a diam metus. Maecenas quis metus at risus rhoncus consequat. Fusce dignissim nibh nec diam faucibus vestibulum. Aliquam commodo neque nulla, sit amet aliquet eros sodales sit amet.
-
-Sed quis quam arcu. Praesent ornare elementum condimentum. Ut dictum eleifend massa, at cursus eros consectetur sit amet. Nullam bibendum diam vitae tincidunt scelerisque. Pellentesque pulvinar porttitor arcu eget pretium. Sed ac leo arcu. Phasellus vel blandit purus. In ac ex eleifend, sagittis leo venenatis, hendrerit risus. Nam sed facilisis eros. Fusce interdum ultricies fringilla. Maecenas convallis et tortor eget maximus. Quisque tempor ex massa. Quisque et sagittis enim, vitae faucibus justo. Duis sollicitudin turpis quam. In ultricies molestie urna, id sodales ipsum egestas at.
-
-Curabitur eu commodo velit. Nam at ipsum fringilla, luctus ante vel, bibendum tellus. Proin turpis erat, eleifend ac cursus id, finibus sed mi. Curabitur eu fringilla mauris. Quisque euismod nibh enim, non feugiat nulla finibus pretium. Vivamus condimentum ut quam at semper. In pellentesque mauris urna, sit amet eleifend justo cursus at. Nam hendrerit sodales tellus, sed commodo mauris sodales sit amet. Quisque vel sapien et nisl pharetra hendrerit id sit amet ex. Phasellus quis rutrum enim. Curabitur blandit commodo purus quis euismod. Pellentesque dui urna, lacinia ut sagittis sit amet, vehicula sed tellus. Mauris molestie tortor et nibh cursus volutpat. In hac habitasse platea dictumst. Sed euismod ex turpis, nec consectetur augue sollicitudin sit amet.
-
-Praesent euismod molestie ligula id egestas. Proin mi lectus, dapibus non egestas in, elementum et lorem. In id viverra felis. Praesent maximus, ante sit amet porttitor porttitor, elit risus tempus quam, et porttitor justo augue fringilla lorem. Nullam sodales nisl nulla, eu tincidunt magna scelerisque a. Nulla in mollis elit, pulvinar sodales ante. Praesent maximus diam quis tristique euismod. Vivamus rutrum lacinia arcu non rutrum. Ut eu nunc risus. Praesent aliquam aliquam risus, a pellentesque felis cursus vel.
-
-</p>
-            </div>
-        `;
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
-
-    renderList();
-    renderDetail(data[0]);
-
+    
+    loadMyApplications();
 </script>
-
 {% endblock %}
