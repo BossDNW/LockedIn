@@ -1,0 +1,154 @@
+{% extends "authenticated-base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .edit-card {
+        margin-top: 40px;
+        padding: 30px;
+        border-radius: 10px;
+        border: 1px solid var(--border-colour);
+        background-color: white;
+    }
+    .edit-card h4 {
+        margin-bottom: 30px;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+    }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-colour);
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #1565c0;
+        box-shadow: 0 0 5px rgba(21, 101, 192, 0.3);
+    }
+    .btn-save {
+        background-color: #1565c0;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    .btn-save:hover {
+        background-color: #0d47a1;
+    }
+    .btn-cancel {
+        background-color: #9e9e9e;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-cancel:hover {
+        background-color: #757575;
+    }
+</style>
+{% endblock %}
+
+{% block subpage_content %}
+<div class="page-content">
+    <div class="edit-card">
+        <h4>Edit Profile</h4>
+        
+        <form method="POST" action="/update-profile">
+            {% if user.role == 'student' %}
+                <!-- Student Edit Form -->
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="username" value="{{ user.name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ user.phone or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Resume Link</label>
+                    <input type="url" name="resume" value="{{ user.resume or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="5">{{ user.description or '' }}</textarea>
+                </div>
+
+            {% elif user.role == 'company' %}
+                <!-- Company Edit Form -->
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" name="username" value="{{ user.name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" value="{{ user.location or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ user.phone or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Website</label>
+                    <input type="url" name="website" value="{{ user.website or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="5">{{ user.description or '' }}</textarea>
+                </div>
+
+            {% else %}
+                <!-- Admin Edit Form -->
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="username" value="{{ user.username or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ user.email or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ user.phone or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="5">{{ user.description or '' }}</textarea>
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <button type="submit" class="btn-save">Save Changes</button>
+                <a href="/profile" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
