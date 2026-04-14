@@ -14,7 +14,21 @@ static_files = StaticFiles(directory="app/static")
 router = APIRouter(tags=["Jinja Based Endpoints"], include_in_schema=get_settings().env.lower() in ["dev","development"])
 api_router = APIRouter(tags=["API Endpoints"], prefix="/api")
 
-from . import (index, login, register, admin_home, user_home, users, logout, profile, programmes, applications, api_programmes)
+# Import all route modules
+from . import index
+from . import login
+from . import register
+from . import admin_home
+from . import user_home
+from . import users
+from . import logout
+from . import profile
+from . import programmes
+from . import applications
+from . import api_programmes
+from . import candidates
+from . import my_applications
+from . import admin_candidates
 
 # Include profile router
 router.include_router(profile.router)
@@ -22,6 +36,20 @@ router.include_router(profile.router)
 # Include programmes HTML page on main router
 router.include_router(programmes.router)
 
-# Include API routes
+# Include candidates router (for HTML page)
+router.include_router(candidates.router)
+
+# Include my applications router (only accessible by students)
+router.include_router(my_applications.router)
+
+# Include admin candidates router (only accessible by admins)
+router.include_router(admin_candidates.router)
+
+# Include API routes from candidates (the /api/candidates endpoints)
+api_router.include_router(candidates.router)
+
+# Include API routes from api_programmes
 api_router.include_router(api_programmes.router)
+
+# Include applications API routes
 api_router.include_router(applications.router)
