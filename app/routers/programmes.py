@@ -53,12 +53,13 @@ async def post_programme(
 
     company = db.exec(select(Company).where(Company.id == user.id)).first()
 
-    existing_programme = db.exec(
-        select(Programme).where(
-            Programme.title == title,
-            Programme.companyId == company.id
-        )
-    ).first()
+    if company:
+        existing_programme = db.exec(
+            select(Programme).where(
+                Programme.title == title,
+                Programme.companyId == company.id
+            )
+        ).first()
     
     if existing_programme:
         flash(request, f"A programme with the title '{title}' already exists for your company. Please use a different title.", "danger")
