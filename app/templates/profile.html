@@ -78,7 +78,16 @@
             {% endif %}
             <div class="profile-name">{{ user.name }} (@{{ user.username }})</div>
             <div class="profile-info">{{ user.email }} | {{ user.phone or 'Not provided' }} | Profile Type: {{ user.role }}</div>
+            <div class="profile-info">
+                Resume: 
+                {% if user.resume %}
+                    <a href="{{ user.resume }}" target="_blank" rel="noopener noreferrer">View Resume</a>
+                {% else %}
+                    No resume uploaded.
+                {% endif %}
+            </div>
             <div class="description">
+                <h3>Description:</h3><br>
                 {{ user.description or 'No description provided.' }}
             </div>
             

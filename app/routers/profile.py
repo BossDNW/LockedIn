@@ -38,6 +38,7 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "profile_picture": profile_data.profilePicture if profile_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
+        "resume": profile_data.resume if user.role == 'student' and profile_data else ""
     }
     
     return templates.TemplateResponse(
@@ -72,6 +73,7 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "profile_picture": profile_data.profilePicture if profile_data and profile_data.profilePicture else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
+        "resume": profile_data.resume if user.role == 'student' and profile_data else ""
     }
     
     return templates.TemplateResponse(
@@ -91,6 +93,9 @@ async def update_profile(
     description: str = Form(None),
     # Company-specific fields
     location: str = Form(None),
+    website: str = Form(None),
+    #Student specific fields
+    resume: str = Form(None)
     website: str = Form(None),
     profile_picture: str = Form(None)  
 ):
@@ -115,6 +120,8 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
+            if resume and resume != profile.resume:
+                profile.resume = resume
             if profile_picture is not None:
                 profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
