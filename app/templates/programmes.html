@@ -1,132 +1,86 @@
 {% extends "authenticated-base.html" %}
-
 {% block title %}Programmes{% endblock %}
 
-{% block additional_styles %}
-<style>
-    .search-filters {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-top: 15px;
-        flex-wrap: wrap;
-    }
-    
-    .filter-select {
-        background-color: white;
-        color: rgb(53, 53, 53);
-        border: solid var(--border-colour) 1px;
-        border-radius: 20px;
-        padding: 10px 16px;
-        font-size: 12px;
-        cursor: pointer;
-        font-family: inherit;
-    }
-    
-    .filter-select:hover {
-        background-color: rgb(156, 156, 156);
-        color: white;
-    }
-    
-    .item-tags {
-        margin-top: 10px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    
-    .item-tags span {
-        color: rgb(82, 82, 82);
-        background-color: var(--border-colour);
-        border-radius: 16px;
-        padding: 4px 10px;
-        font-size: 10px;
-        font-weight: 600;
-    }
-    
-    .company-info {
-        background-color: #f5f5f5;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 15px 0;
-    }
-    
-    .programme-details {
-        margin: 20px 0;
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-    }
-    
-    .programme-details p {
-        margin: 8px 0;
-    }
-    
-    .programme-description {
-        margin: 20px 0;
-        line-height: 1.6;
-    }
-    
-    .apply-btn {
-        background-color: #1565c0;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 600;
-        margin-top: 20px;
-        width: 100%;
-    }
-    
-    .apply-btn:hover {
-        background-color: #0d47a1;
-    }
-    
-    .master-item.active {
-        background-color: #e3f2fd;
-        border-color: #1565c0;
-    }
-    
-    .pagination {
-        margin: 30px 0;
-    }
-    
-    .pagination button.active-page {
-        background-color: #1565c0;
-        color: white;
-        border-color: #1565c0;
-    }
-</style>
+{% block external_js %}
 {% endblock %}
 
 {% block subpage_content %}
 <div class="page-content">
     <div class="search">
-        <input class="search-bar" type="text" placeholder="Search by programme title or company name...">
+        <input class="search-bar" type="text" placeholder="Programmes title or company name">
         
         <div class="search-filters">
-            <select id="academic-year-filter" class="filter-select">
-                <option value="all">All Academic Years</option>
-            </select>
-            <select id="credits-filter" class="filter-select">
-                <option value="all">All Credits</option>
-            </select>
+            <button>Academic Year</button>
+            <button>Field</button>
+            <button>Credits</button>
         </div>
     </div>
 
     <div class="master-detail">
         <div class="master" id="master">
-            <div style="text-align: center; padding: 20px;">Loading programmes...</div>
-        </div>
-        <div class="detail" id="detail">
-            <div class="detail-view" style="padding: 20px; text-align: center;">
-                Select a programme to view details
+            {% for programme in programmes %}
+            <div class="master-item {% if loop.first %}active{% endif %}" 
+                 onclick="window.location.href='?id={{ programme.id }}'">
+                <div class="item-content">
+                    <h2>{{ programme.programme_title }}</h2>
+                    <p>{{ programme.company_name }}, {{ programme.company_location }}</p>
+                    <span>{{ programme.academic_year }}</span>
+                    <span>{{ programme.field }}</span>
+                    <span>{{ programme.credits }}</span>
+                </div>
             </div>
+            {% endfor %}
+        </div>
+        
+        <div class="detail" id="detail">
+            {% if selected_programme %}
+            <div class="detail-view">
+                <h2>{{ selected_programme.programme_title }}</h2>
+                <p>{{ selected_programme.company_name }}, {{ selected_programme.company_location }}</p>
+                <span>{{ selected_programme.academic_year }}</span>
+                <span>{{ selected_programme.field }}</span>
+                <span>{{ selected_programme.credits }}</span><br>
+                <p>{{ selected_programme.description }}</p>
+                
+                {% if user.role == 'student' %}
+                <button class="apply-btn" onclick="window.location.href='/apply/{{ selected_programme.id }}'">
+                    Apply Now
+                </button>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
-    
-    <div class="pagination"></div>
 </div>
+
+<style>
+    .master-item {
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .master-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .master-item.active {
+        background-color: var(--border-colour);
+        border-left: 3px solid rgb(53, 53, 53);
+    }
+    
+    .apply-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        margin-top: 20px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .apply-btn:hover {
+        background-color: #0056b3;
+    }
+</style>
 {% endblock %}

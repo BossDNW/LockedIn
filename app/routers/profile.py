@@ -33,6 +33,7 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "description": profile_data.bio if profile_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
+        "resume": profile_data.resume if user.role == 'student' and profile_data else ""
     }
     
     return templates.TemplateResponse(
@@ -66,6 +67,7 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "description": profile_data.bio if profile_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
+        "resume": profile_data.resume if user.role == 'student' and profile_data else ""
     }
     
     return templates.TemplateResponse(
@@ -85,7 +87,9 @@ async def update_profile(
     description: str = Form(None),
     # Company-specific fields
     location: str = Form(None),
-    website: str = Form(None)
+    website: str = Form(None),
+    #Student specific fields
+    resume: str = Form(None)
 ):
     """Update user profile based on role"""
     
@@ -108,6 +112,8 @@ async def update_profile(
                 profile.bio = description if description else ""
             if username and username != profile.name:
                 profile.name = username
+            if resume and resume != profile.resume:
+                profile.resume = resume
             db.add(profile)
             
     elif user.role == 'company':

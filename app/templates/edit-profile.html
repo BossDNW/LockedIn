@@ -89,6 +89,10 @@
                     <input type="text" name="phone" value="{{ user.phone or '' }}">
                 </div>
                 <div class="form-group">
+                    <label>Resume Link</label>
+                    <input type="url" name="resume" value="{{ user.resume or '' }}">
+                </div>
+                <div class="form-group">
                     <label>Description</label>
                     <textarea name="description" rows="5">{{ user.description or '' }}</textarea>
                 </div>
