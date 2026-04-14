@@ -19,73 +19,52 @@ async def register_view(request: Request):
 
 # Action route (performs an action)
 @router.post('/register', response_class=HTMLResponse, status_code=status.HTTP_201_CREATED)
-def signup_user(request: Request, db: SessionDep, 
+def signup_user(request:Request, db:SessionDep, 
     username: str = Form(),
     email: str = Form(),
-    role: str = Form(),
+    role : str = Form(),
     password: str = Form(),
 ):
     user_repo = UserRepository(db)
     auth_service = AuthService(user_repo)
     try:
-        # Create the user first
         user = auth_service.register_user(username, email, password, role)
-        
-        # Now create the profile with the user's ID
         try:
-            if role == 'company':
-                # Create Company entry
-                company = Company(name=username)
-                db.add(company)
-                db.commit()
-                db.refresh(company)
-                
-                # Create CompanyProfile with userId
-                comp_profile = CompanyProfile(
+            profile_base = ProfileBase(
                     userId=user.id,
-                    name=username,
-                    contact="",
-                    bio="",
-                    profilePicture="",
-                    location="",
-                    website=""
-                )
-                db.add(comp_profile)
-                db.commit()
-                
-            elif role == 'student':
-                # Create StudentProfile with userId
-                stud_profile = StudentProfile(
-                    userId=user.id,
-                    name=username,
-                    contact="",
-                    bio="",
-                    profilePicture="",
-                    resume=""
-                )
-                db.add(stud_profile)
-                db.commit()
-                
-            else:  # admin
-                # Create AdminProfile with userId
-                admin_profile = AdminProfile(
-                    userId=user.id,
-                    name=username,
+                    name=user.username,
                     contact="",
                     bio="",
                     profilePicture=""
                 )
+            profile_dict = profile_base.model_dump()
+            if role == 'company':
+                profile_dict["location"] = ""
+                profile_dict["website"] = ""
+                comp_profile = CompanyProfile.model_validate(profile_dict)
+                company = Company(name=username)
+                db.add(company)
+                db.add(comp_profile)
+                db.commit()
+                db.refresh(comp_profile)
+            elif role == 'student':
+                profile_dict["resume"] = ""
+                stud_profile = StudentProfile.model_validate(profile_dict)
+                db.add(stud_profile)
+                db.commit()
+                db.refresh(stud_profile)
+            else:
+                admin_profile = AdminProfile.model_validate(profile_dict)
                 db.add(admin_profile)
                 db.commit()
-                
+                db.refresh(admin_profile)
         except Exception as e:
-            # Rollback user creation if profile creation fails
             db.delete(user)
             db.commit()
-            flash(request, f"Error creating profile: {e}", "danger")
+            flash(request, f"error: {e}", "danger")
             return RedirectResponse(url=request.url_for("register_view"), status_code=status.HTTP_303_SEE_OTHER)
         
-        flash(request, "Registration completed! Sign in now!", "success")
+        flash(request, "Registration completed! Sign in now!")
         return RedirectResponse(url=request.url_for("login_view"), status_code=status.HTTP_303_SEE_OTHER)
         
     except Exception as e:

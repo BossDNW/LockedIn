@@ -1,6 +1,10 @@
 from sqlmodel import Field, SQLModel, Relationship
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from pydantic import EmailStr
+
+# Use TYPE_CHECKING to avoid circular imports
+if TYPE_CHECKING:
+    from .user import Application, Programme, Company, StudentProfile, AdminProfile, CompanyProfile
 
 class UserBase(SQLModel):
     username: str = Field(index=True, unique=True)
@@ -53,34 +57,26 @@ class CompanyBase(SQLModel):
 class Company(CompanyBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     programmes: List["Programme"] = Relationship(back_populates="company")
-    # NO relationship to CompanyProfile
 
 class ProfileBase(SQLModel):
+    userId: int = Field(index=True, foreign_key="user.id", unique=True)
+    name: str = Field(index=True)
     contact: str = Field(index=True)
     bio: str = Field(index=True)
     profilePicture: str = Field(index=True)
 
+
 class StudentProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     resume: str = Field(index=True)
     user: Optional["User"] = Relationship(back_populates="student_profile")
 
 class AdminProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     user: Optional["User"] = Relationship(back_populates="admin_profile")
 
 class CompanyProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     location: str = Field(index=True)
     website: str = Field(index=True)
     user: Optional["User"] = Relationship(back_populates="company_profile")
-
-class ApplicationStatus:
-    PENDING = "pending"
-    SHORTLISTED = "shortlisted"
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    WAITLISTED = "waitlisted"

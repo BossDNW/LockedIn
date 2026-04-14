@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
-from app.dependencies.auth import AuthDep
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import status
 from app.dependencies.session import SessionDep
+from app.dependencies.auth import AuthDep, IsUserLoggedIn, get_current_user, is_admin
 from . import router, templates
 
 
@@ -9,7 +10,7 @@ from . import router, templates
 async def user_home_view(
     request: Request,
     user: AuthDep,
-    db: SessionDep
+    db:SessionDep
 ):
     return templates.TemplateResponse(
         request=request, 

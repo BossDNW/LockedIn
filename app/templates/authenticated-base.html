@@ -46,15 +46,11 @@
 
         .nav-left, .nav-right {
             display: flex;
-            align-items: center;
-            gap: 30px;
         }
 
         .page-links, .account-options {
             display: flex;
             gap: 30px;
-            margin: 0;
-            padding: 0;
         }
 
         li {
@@ -244,38 +240,34 @@
 <div class="topnav">
     <div class="topnav-content">
         <div class="nav-left">
-            <img src="/static/img/logo.png" alt="LockedIn Logo" style="height: 40px;">
+            <!-- <h1>Logo</h1> -->
+             <img src="/static/img/logo.png" alt="LockedIn Logo" style="height: 40px; margin-bottom: 4px;">
             <ul class="page-links">
                 <li><a href="/programmes">Programmes</a></li>
-                
-                <!-- Student Links -->
-                {% if user and user.role == 'student' %}
-                    <li><a href="/my-applications">My Applications</a></li>
-                {% endif %}
-                
-                <!-- Company Links -->
-                {% if user and user.role == 'company' %}
-                    <li><a href="/candidates">My Candidates</a></li>
+
+                {% if user.role == 'company' %}
+                    <li><a href="/candidates">Candidates</a></li>
                     <li><a href="/post-programme">Post a Programme</a></li>
+                    
+                {% elif user.role == 'admin' %}
+                    <li><a href="/applicants">Applicants</a></li>
                 {% endif %}
-                
-                <!-- Admin Links -->
-                {% if user and user.role == 'admin' %}
-                    <li><a href="/admin/candidates">Admin - Shortlist</a></li>
-                {% endif %}
+
             </ul>
         </div>
 
         <div class="nav-right">
             <ul class="account-options">
-                <li><a href="/profile">Profile</a></li>
                 <li><a href="/logout">Logout</a></li>
+                <li><a href="/profile">Profile</a></li>
             </ul>
         </div>
     </div>
 </div>
 
-{% block subpage_content %}{% endblock %}
+
+    {% block subpage_content %}{% endblock %}
+
 
 {% block subpage_scripts %}{% endblock %}
 

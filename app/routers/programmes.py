@@ -9,6 +9,7 @@ from app.routers import templates
 
 router = APIRouter(tags=["Programmes"])
 
+# HTML PAGE ROUTE - Only this remains
 @router.get("/programmes", response_class=HTMLResponse)
 async def programmes_page(request: Request, db: SessionDep, user: AuthDep):
     """Render the programmes page"""
