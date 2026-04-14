@@ -46,11 +46,15 @@
 
         .nav-left, .nav-right {
             display: flex;
+            align-items: center;
+            gap: 30px;
         }
 
         .page-links, .account-options {
             display: flex;
             gap: 30px;
+            margin: 0;
+            padding: 0;
         }
 
         li {
@@ -211,7 +215,7 @@
         }
 
         .detail-view button {
-            background-color: rgb(72, 72, 72);;
+            background-color: rgb(72, 72, 72);
             color: white;
             border: none;
             border-radius: 20px;
@@ -229,6 +233,32 @@
             margin-bottom: 12px;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 2em;
+        }
+
+        .pagination button {
+            padding: 6px 14px;
+            border: solid var(--border-colour) 1px;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .pagination button.active-page {
+            background-color: var(--border-colour);
+        }
+
+        .footer {
+            width: 100%;
+            background-color: rgb(82, 82, 82);
+            height: 100px;
+        }
+
 </style>
 
 {% block additional_styles %}{% endblock %}
@@ -240,34 +270,38 @@
 <div class="topnav">
     <div class="topnav-content">
         <div class="nav-left">
-            <!-- <h1>Logo</h1> -->
-             <img src="/static/img/logo.png" alt="LockedIn Logo" style="height: 40px; margin-bottom: 4px;">
+            <img src="/static/img/logo.png" alt="LockedIn Logo" style="height: 40px;">
             <ul class="page-links">
                 <li><a href="/programmes">Programmes</a></li>
-
-                {% if user.role == 'company' %}
-                    <li><a href="/candidates">Candidates</a></li>
-                    <li><a href="/post-programme">Post a Programme</a></li>
-                    
-                {% elif user.role == 'admin' %}
-                    <li><a href="/applicants">Applicants</a></li>
+                
+                <!-- Student Links -->
+                {% if user and user.role == 'student' %}
+                    <li><a href="/my-applications">My Applications</a></li>
                 {% endif %}
-
+                
+                <!-- Company Links -->
+                {% if user and user.role == 'company' %}
+                    <li><a href="/candidates">My Candidates</a></li>
+                    <li><a href="/post-programme">Post a Programme</a></li>
+                {% endif %}
+                
+                <!-- Admin Links -->
+                {% if user and user.role == 'admin' %}
+                    <li><a href="/admin/candidates">Admin - Shortlist</a></li>
+                {% endif %}
             </ul>
         </div>
 
         <div class="nav-right">
             <ul class="account-options">
-                <li><a href="/logout">Logout</a></li>
                 <li><a href="/profile">Profile</a></li>
+                <li><a href="/logout">Logout</a></li>
             </ul>
         </div>
     </div>
 </div>
 
-
-    {% block subpage_content %}{% endblock %}
-
+{% block subpage_content %}{% endblock %}
 
 {% block subpage_scripts %}{% endblock %}
 
