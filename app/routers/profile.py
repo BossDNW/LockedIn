@@ -28,6 +28,7 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "username": user.username,
         "email": user.email,
         "role": user.role,
+        "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
         "company_name": company_data.name if company_data else "",
@@ -61,6 +62,7 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "username": user.username,
         "email": user.email,
         "role": user.role,
+        "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
         "company_name": company_data.name if company_data else "",
@@ -97,10 +99,6 @@ async def update_profile(
         db_user.email = email
         db.add(db_user)
     
-    if username and username != user.username:
-        db_user.username = username
-        db.add(db_user)
-    
    
     
     # Update profile based on role
@@ -111,6 +109,8 @@ async def update_profile(
                 profile.contact = phone if phone else ""
             if description is not None:
                 profile.bio = description if description else ""
+            if username and username != profile.name:
+                profile.name = username
             db.add(profile)
             
     elif user.role == 'company':
@@ -125,6 +125,8 @@ async def update_profile(
                 profile.contact = phone if phone else ""
             if description is not None:
                 profile.bio = description if description else ""
+            if username and username != profile.name:
+                profile.name = username
             db.add(profile)
         
         # Update Company table (company name)
@@ -144,6 +146,8 @@ async def update_profile(
                 profile.contact = phone if phone else ""
             if description is not None:
                 profile.bio = description if description else ""
+            if username and username != profile.name:
+                profile.name = username
             db.add(profile)
     
     db.commit()

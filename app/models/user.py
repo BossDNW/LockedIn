@@ -51,28 +51,26 @@ class CompanyBase(SQLModel):
 class Company(CompanyBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     programmes: List["Programme"] = Relationship(back_populates="company")
-    company_profile: Optional["CompanyProfile"] = Relationship(back_populates="company", sa_relationship_kwargs={"uselist": False})
 
 class ProfileBase(SQLModel):
+    userId: int = Field(index=True, foreign_key="user.id", unique=True)
+    name: str = Field(index=True)
     contact: str = Field(index=True)
     bio: str = Field(index=True)
     profilePicture: str = Field(index=True)
 
+
 class StudentProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     resume: str = Field(index=True)
     user: Optional["User"] = Relationship(back_populates="student_profile")
 
 class AdminProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     user: Optional["User"] = Relationship(back_populates="admin_profile")
 
 class CompanyProfile(ProfileBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    userId: int = Field(index=True, foreign_key="user.id", unique=True)
     location: str = Field(index=True)
     website: str = Field(index=True)
     user: Optional["User"] = Relationship(back_populates="company_profile")
-    company: Optional["Company"] = Relationship(back_populates="company_profile")

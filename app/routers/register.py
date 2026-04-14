@@ -6,6 +6,7 @@ from app.schemas.auth import SignupRequest
 from app.services.auth_service import AuthService
 from app.repositories.user import UserRepository
 from app.utilities.flash import flash
+from app.models.user import *
 from . import router, templates
 
 # View route (loads the page)
@@ -28,46 +29,37 @@ def signup_user(request:Request, db:SessionDep,
     auth_service = AuthService(user_repo)
     try:
         user = auth_service.register_user(username, email, password, role)
+        try:
+            profile_base = ProfileBase(
+                    userId=user.id,
+                    name=user.username,
+                    contact="",
+                    bio="",
+                    profilePicture=""
+                )
+            profile_dict = profile_base.model_dump()
+            if role == 'company':
+                comp_profile = CompanyProfile.model_validate(profile_dict)
+                db.add(comp_profile)
+                db.commit()
+                db.refresh(comp_profile)
+            elif role == 'student':
+                profile_dict["resume"] = ""
+                stud_profile = StudentProfile.model_validate(profile_dict)
+                db.add(stud_profile)
+                db.commit()
+                db.refresh(stud_profile)
+            else:
+                admin_profile = AdminProfile.model_validate(profile_dict)
+                db.add(admin_profile)
+                db.commit()
+                db.refresh(admin_profile)
+        except Exception as e:
+            db.delete(user)
+            db.commit()
+            flash(request, f"error: {e}", "danger")
+            return RedirectResponse(url=request.url_for("register_view"), status_code=status.HTTP_303_SEE_OTHER)
         
-        # Create profile based on role
-        if role == 'student':
-            student_profile = StudentProfile(
-                userId=user.id,
-                contact="",
-                bio="",
-                profilePicture="",
-                resume=""
-            )
-            db.add(student_profile)
-            
-        elif role == 'company':
-            company_profile = CompanyProfile(
-                userId=user.id,
-                contact="",
-                bio="",
-                profilePicture="",
-                location="",
-                website=""
-            )
-            db.add(company_profile)
-            
-            # Also create Company record
-            company = Company(
-                id=user.id,
-                name=username
-            )
-            db.add(company)
-            
-        elif role == 'admin':
-            admin_profile = AdminProfile(
-                userId=user.id,
-                contact="",
-                bio="",
-                profilePicture=""
-            )
-            db.add(admin_profile)
-        
-        db.commit()
         flash(request, "Registration completed! Sign in now!")
         return RedirectResponse(url=request.url_for("login_view"), status_code=status.HTTP_303_SEE_OTHER)
         
