@@ -9,6 +9,7 @@ from app.models.user import Programme, Application, User
 
 router = APIRouter(tags=["Candidates"])
 
+# HTML PAGE - View candidates (ONLY for companies)
 @router.get("/candidates", response_class=HTMLResponse)
 async def candidates_page(request: Request, user: AuthDep):
     """Render the candidates page - ONLY COMPANIES CAN ACCESS"""
@@ -25,7 +26,7 @@ async def candidates_page(request: Request, user: AuthDep):
     )
 
 
-# API - Get candidates for a company's programmes (shortlisted students only)
+# API - Get candidates for a company's programmes (ONLY shortlisted candidates)
 @router.get("/api/candidates")
 async def get_candidates(
     db: SessionDep,
@@ -34,7 +35,7 @@ async def get_candidates(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=50)
 ):
-    """Get all candidates who applied to this company's programmes"""
+    """Get shortlisted candidates for this company's programmes"""
     if user.role != 'company':
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -59,7 +60,7 @@ async def get_candidates(
             }
         }
     
-    # Get applications for these programmes (only show shortlisted, accepted, rejected, waitlisted)
+    # Get SHORTLISTED applications for these programmes (only shortlisted ones go to company)
     query = (
         select(Application, User, Programme)
         .join(User, Application.userId == User.id)
