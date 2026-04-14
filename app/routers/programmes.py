@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
+from app.models import user
 from app.routers import templates
 
 router = APIRouter(tags=["Programmes"])
@@ -10,5 +11,6 @@ async def programmes_page(request: Request):
     """Render the programmes page"""
     return templates.TemplateResponse(
         request=request,
-        name="programmes.html"
+        name="programmes.html",
+        context={"user": user}
     )

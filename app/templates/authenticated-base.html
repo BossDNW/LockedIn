@@ -250,6 +250,15 @@
              <img src="/static/img/logo.png" alt="LockedIn Logo" style="height: 40px; margin-bottom: 4px;">
             <ul class="page-links">
                 <li><a href="/programmes">Programmes</a></li>
+
+                {% if user.role == 'company' %}
+                    <li><a href="/candidates">Candidates</a></li>
+                    <li><a href="/post-programme">Post a Programme</a></li>
+                    
+                {% elif user.role == 'admin' %}
+                    <li><a href="/applicants">Applicants</a></li>
+                {% endif %}
+
             </ul>
         </div>
 
