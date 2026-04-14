@@ -13,13 +13,13 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
     """Display user profile based on role"""
     
     profile_data = None
-    company_data = None
+    company_data = False
     
     if user.role == 'student':
         profile_data = db.exec(select(StudentProfile).where(StudentProfile.userId == user.id)).first()
     elif user.role == 'company':
         profile_data = db.exec(select(CompanyProfile).where(CompanyProfile.userId == user.id)).first()
-        company_data = db.exec(select(Company).where(Company.id == user.id)).first()
+        company_data = True
     elif user.role == 'admin':
         profile_data = db.exec(select(AdminProfile).where(AdminProfile.userId == user.id)).first()
     
@@ -31,7 +31,6 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
         "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
-        "company_name": company_data.name if company_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -65,7 +64,6 @@ async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
         "name": profile_data.name if profile_data else "",
         "phone": profile_data.contact if profile_data else "",
         "description": profile_data.bio if profile_data else "",
-        "company_name": company_data.name if company_data else "",
         "location": profile_data.location if user.role == 'company' and profile_data else "",
         "website": profile_data.website if user.role == 'company' and profile_data else "",
     }
@@ -86,7 +84,6 @@ async def update_profile(
     phone: str = Form(None),
     description: str = Form(None),
     # Company-specific fields
-    company_name: str = Form(None),
     location: str = Form(None),
     website: str = Form(None)
 ):
@@ -116,6 +113,7 @@ async def update_profile(
     elif user.role == 'company':
         # Update CompanyProfile
         profile = db.exec(select(CompanyProfile).where(CompanyProfile.userId == user.id)).first()
+        company = db.exec(select(Company).where(Company.id == user.id)).first()
         if profile:
             if location is not None:
                 profile.location = location if location else ""
@@ -128,15 +126,12 @@ async def update_profile(
             if username and username != profile.name:
                 profile.name = username
             db.add(profile)
-        
-        # Update Company table (company name)
-        if company_name is not None:
-            company = db.exec(select(Company).where(Company.id == user.id)).first()
+      
             if company:
-                company.name = company_name if company_name else ""
+                company.name = username if username else ""
                 db.add(company)
             else:
-                new_company = Company(id=user.id, name=company_name)
+                new_company = Company(id=user.id, name=username)
                 db.add(new_company)
             
     elif user.role == 'admin':

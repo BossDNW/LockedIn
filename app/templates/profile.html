@@ -61,7 +61,7 @@
 
         {% elif user.role == 'company' %}
             <!-- Company Profile -->
-            <div class="profile-name">{{ user.company_name or user.username }}</div>
+            <div class="profile-name">{{ user.name }} (@ {{ user.username }})</div>
             
             <div class="company-details">
                 <div><strong>Location:</strong> {{ user.location or 'Not specified' }}</div>
@@ -72,11 +72,14 @@
                     <strong>Phone:</strong> {{ user.phone or 'Not provided' }}
                 </div>
                 <div style="margin-top: 10px;">
-                    <strong>Website:</strong> {{ user.website or 'No website' }}
+                    <a href="{{ user.website or '#' }}" target="_blank" rel="noopener noreferrer">
+                        <strong>Website:</strong> {{ user.website or 'No website' }}
+                    </a>
                 </div>
             </div>
             
             <div class="description">
+                <h3>Description:</h3><br>
                 {{ user.description or 'No description provided.' }}
             </div>
             

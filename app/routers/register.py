@@ -42,6 +42,8 @@ def signup_user(request:Request, db:SessionDep,
                 profile_dict["location"] = ""
                 profile_dict["website"] = ""
                 comp_profile = CompanyProfile.model_validate(profile_dict)
+                company = Company(name=username)
+                db.add(company)
                 db.add(comp_profile)
                 db.commit()
                 db.refresh(comp_profile)
