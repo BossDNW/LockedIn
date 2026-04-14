@@ -1,4 +1,3 @@
-// ========== EXISTING CODE - DO NOT REMOVE ==========
 async function getUserData(){
     const response = await fetch('/api/users');
     return response.json();
@@ -6,7 +5,7 @@ async function getUserData(){
 
 function loadTable(users){
     const table = document.querySelector('#result');
-    if (!table) return; // Only run if #result element exists
+    if (!table) return; 
     for(let user of users){
         table.innerHTML += `<tr>
             <td>${user.id}</td>
@@ -20,34 +19,28 @@ async function main(){
     loadTable(users);
 }
 
-// Only run the existing main() if we're on a page that has #result element
 if (document.querySelector('#result')) {
     main();
 }
-// ========== END EXISTING CODE ==========
 
-// ========== NEW CODE FOR PROGRAMMES SEARCH AND FILTER ==========
-// Global variables for programmes functionality
 let currentPage = 1;
 let currentQuery = "";
 let currentAcademicYear = null;
 let currentCredits = null;
 let totalPages = 1;
 
-// Function to search programmes
+
 async function searchProgrammes(page = 1) {
     const searchInput = document.querySelector('.search-bar');
     const academicYearFilter = document.querySelector('#academic-year-filter');
     const creditsFilter = document.querySelector('#credits-filter');
     
-    // Only run if we're on the programmes page
     if (!searchInput) return;
     
     const query = searchInput ? searchInput.value : '';
     const academicYear = academicYearFilter ? academicYearFilter.value : '';
     const credits = creditsFilter ? creditsFilter.value : '';
     
-    // Build URL with query parameters
     let url = `/api/programmes/search?page=${page}&limit=10`;
     if (query) url += `&q=${encodeURIComponent(query)}`;
     if (academicYear && academicYear !== 'all') url += `&academic_year=${academicYear}`;
@@ -66,7 +59,6 @@ async function searchProgrammes(page = 1) {
         loadProgrammesTable(result.data);
         updatePagination(result.pagination);
         
-        // Select first item by default
         if (result.data.length > 0) {
             renderDetail(result.data[0]);
         } else {
@@ -85,7 +77,6 @@ async function searchProgrammes(page = 1) {
     }
 }
 
-// Function to load programmes into the master list
 function loadProgrammesTable(programmes) {
     const masterList = document.getElementById("master");
     if (!masterList) return;
@@ -119,7 +110,6 @@ function loadProgrammesTable(programmes) {
     }
 }
 
-// Function to render detail view
 function renderDetail(programme) {
     const detailView = document.getElementById("detail");
     if (!detailView) return;
@@ -152,21 +142,18 @@ function renderDetail(programme) {
     `;
 }
 
-// Function to update pagination controls
 function updatePagination(pagination) {
     const paginationContainer = document.querySelector('.pagination');
     if (!paginationContainer) return;
     
     let html = '';
     
-    // Previous button
     if (pagination.has_prev) {
         html += `<button onclick="changePage(${pagination.prev_page})">Previous</button>`;
     } else {
         html += `<button disabled>Previous</button>`;
     }
     
-    // Page numbers
     for (let i = 1; i <= pagination.total_pages; i++) {
         if (i === pagination.current_page) {
             html += `<button class="active-page" disabled>${i}</button>`;
@@ -177,7 +164,6 @@ function updatePagination(pagination) {
         }
     }
     
-    // Next button
     if (pagination.has_next) {
         html += `<button onclick="changePage(${pagination.next_page})">Next</button>`;
     } else {
@@ -187,20 +173,18 @@ function updatePagination(pagination) {
     paginationContainer.innerHTML = html;
 }
 
-// Function to change page
+
 function changePage(page) {
     if (page >= 1 && page <= totalPages) {
         searchProgrammes(page);
     }
 }
 
-// Function to load filter options
 async function loadFilterOptions() {
     try {
         const response = await fetch('/api/programmes/filters/options');
         const options = await response.json();
         
-        // Populate academic year filter
         const academicFilter = document.querySelector('#academic-year-filter');
         if (academicFilter && options.academic_years) {
             academicFilter.innerHTML = '<option value="all">All Years</option>';
@@ -209,7 +193,6 @@ async function loadFilterOptions() {
             });
         }
         
-        // Populate credits filter
         const creditsFilter = document.querySelector('#credits-filter');
         if (creditsFilter && options.credits) {
             creditsFilter.innerHTML = '<option value="all">All Credits</option>';
@@ -222,7 +205,6 @@ async function loadFilterOptions() {
     }
 }
 
-// Function to apply to a programme
 async function applyToProgramme(programmeId) {
     try {
         const response = await fetch('/api/applications', {
@@ -235,7 +217,6 @@ async function applyToProgramme(programmeId) {
         
         if (response.ok) {
             alert('Successfully applied to the programme!');
-            // Optionally refresh the page or update UI
         } else {
             const error = await response.json();
             alert(error.detail || 'Failed to apply. Please try again.');
@@ -246,7 +227,6 @@ async function applyToProgramme(programmeId) {
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -254,7 +234,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Debounce function for search input
 function debounce(func, delay) {
     let timeout;
     return function executedFunction(...args) {
@@ -267,19 +246,15 @@ function debounce(func, delay) {
     };
 }
 
-// Initialize programmes functionality only on programmes page
 async function initProgrammesPage() {
     // Check if we're on the programmes page
     const masterList = document.getElementById("master");
     if (!masterList) return;
     
-    // Load filter options
     await loadFilterOptions();
     
-    // Load initial programmes
     await searchProgrammes(1);
     
-    // Setup event listeners
     const searchBar = document.querySelector('.search-bar');
     if (searchBar) {
         searchBar.addEventListener('input', debounce(() => searchProgrammes(1), 500));
@@ -296,10 +271,8 @@ async function initProgrammesPage() {
     }
 }
 
-// Run programmes initialization when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initProgrammesPage);
 } else {
     initProgrammesPage();
 }
-// ========== END NEW CODE ==========
