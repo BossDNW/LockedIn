@@ -288,7 +288,6 @@
             });
             
             if (response.ok) {
-                // Refresh both stats and applications
                 await loadStats();
                 await loadMyApplications();
                 alert('Application withdrawn successfully');
@@ -314,7 +313,6 @@
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
     
-    // Load data when page loads
     loadStats();
     loadMyApplications();
     

@@ -11,15 +11,12 @@ router = APIRouter(tags=["Applications"])
 class ApplicationRequest(BaseModel):
     programmeId: int
 
-# API ROUTE - Apply to a programme (no /api prefix)
 @router.post("/applications")
 async def apply_to_programme(
     db: SessionDep,
     user: AuthDep,
     application_data: ApplicationRequest
 ):
-    """Apply to a programme"""
-    # Check if already applied
     existing = db.exec(
         select(Application).where(
             Application.userId == user.id,
@@ -29,8 +26,7 @@ async def apply_to_programme(
     
     if existing:
         raise HTTPException(status_code=400, detail="Already applied to this programme")
-    
-    # Create application
+
     application = Application(
         userId=user.id,
         programmeId=application_data.programmeId,

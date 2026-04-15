@@ -396,7 +396,6 @@
     </div>
 </div>
 
-<!-- Student Profile Modal -->
 <div id="studentModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -454,7 +453,6 @@
             currentPage = data.pagination.current_page;
             totalPages = data.pagination.total_pages;
             
-            // Populate programme filter if empty
             if (programmesList.length === 0 && data.programmes && data.programmes.length > 0) {
                 programmesList = data.programmes;
                 const programmeFilter = document.getElementById('programme-filter');
@@ -690,7 +688,6 @@
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
     
-    // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('studentModal');
         if (event.target === modal) {
@@ -698,11 +695,9 @@
         }
     }
     
-    // Event listeners for filters
     document.getElementById('status-filter').addEventListener('change', () => loadCandidates(1));
     document.getElementById('programme-filter').addEventListener('change', () => loadCandidates(1));
     
-    // Load initial data
     loadStats();
     loadCandidates(1);
     

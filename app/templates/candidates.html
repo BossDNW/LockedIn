@@ -446,7 +446,6 @@
     </div>
 </div>
 
-<!-- Student Profile Modal -->
 <div id="studentModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -652,7 +651,6 @@
                 };
                 showToast(`Candidate ${statusMap[newStatus] || newStatus} successfully!`);
                 
-                // Reload the current page to reflect changes
                 await loadCandidates(currentPage);
             } else {
                 const error = await response.json();
@@ -728,7 +726,6 @@
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
     
-    // Close modal when clicking outside
     window.onclick = function(event) {
         const modal = document.getElementById('studentModal');
         if (event.target === modal) {
@@ -736,10 +733,8 @@
         }
     }
     
-    // Event listener for filter
     document.getElementById('status-filter').addEventListener('change', () => loadCandidates(1));
     
-    // Load initial data
     loadStats();
     loadCandidates(1);
     

@@ -16,7 +16,6 @@ class CandidateRepository:
         page: int = 1,
         limit: int = 10
     ) -> Tuple[List[User], Pagination]:
-        """Get all students with search"""
         offset = (page - 1) * limit
         
         db_qry = select(User).where(User.role == "student")
@@ -38,7 +37,6 @@ class CandidateRepository:
         return students, pagination
 
     def get_applications_for_programme(self, programme_id: int) -> List[dict]:
-        """Get all applications for a specific programme with student details"""
         results = self.db.exec(
             select(Application, User)
             .join(User, Application.userId == User.id)
@@ -64,7 +62,6 @@ class CandidateRepository:
         page: int = 1,
         limit: int = 10
     ) -> Tuple[List[dict], Pagination]:
-        """Get all applications with student and programme details"""
         offset = (page - 1) * limit
         
         db_qry = (
@@ -98,7 +95,6 @@ class CandidateRepository:
         return applications, pagination
 
     def update_application_status(self, application_id: int, new_status: str) -> Optional[Application]:
-        """Update application status (pending/shortlisted/accepted/rejected)"""
         application = self.db.get(Application, application_id)
         if not application:
             return None

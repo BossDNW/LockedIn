@@ -17,7 +17,6 @@ async def search_programmes(
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=10, ge=1, le=50, description="Items per page")
 ):
-    """Search and filter programmes"""
     programme_repo = ProgrammeRepository(db)
     programme_service = ProgrammeService(programme_repo)
     
@@ -64,7 +63,6 @@ async def get_programme_detail(
     user: AuthDep,
     programme_id: int
 ):
-    """Get detailed information about a specific programme"""
     programme_repo = ProgrammeRepository(db)
     programme_service = ProgrammeService(programme_repo)
     
@@ -91,7 +89,6 @@ async def get_filter_options(
     db: SessionDep,
     user: AuthDep
 ):
-    """Get available filter options"""
     programme_repo = ProgrammeRepository(db)
     programme_service = ProgrammeService(programme_repo)
     

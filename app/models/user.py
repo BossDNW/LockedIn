@@ -2,7 +2,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from typing import Optional, List, TYPE_CHECKING
 from pydantic import EmailStr
 
-# Use TYPE_CHECKING to avoid circular imports
+# Note To Self: to avoid circular imports
 if TYPE_CHECKING:
     from .user import Application, Programme, Company, StudentProfile, AdminProfile, CompanyProfile
 
@@ -38,9 +38,9 @@ class ProgrammeBase(SQLModel):
     compensation: str = Field(index=True)
     schedule: str = Field(index=True)
     workSite: str = Field(index=True)
-    description: str = Field(default="")  # Added description field
-    responsibilities: str = Field(default="")  # Added responsibilities field
-    requirements: str = Field(default="")  # Added requirements field
+    description: str = Field(default="") 
+    responsibilities: str = Field(default="") 
+    requirements: str = Field(default="") 
     numberOfPositions: int = Field(index=True)
     hours: str = Field(index=True)
     days: str = Field(index=True)

@@ -1,5 +1,3 @@
-# app/routers/candidates.py
-
 from fastapi import APIRouter, Request, Query, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.dependencies.session import SessionDep
@@ -11,10 +9,9 @@ from app.models.user import Programme, Application, User, StudentProfile
 
 router = APIRouter(tags=["Candidates"])
 
-# HTML PAGE - View candidates (ONLY for companies)
+
 @router.get("/candidates", response_class=HTMLResponse)
 async def candidates_page(request: Request, user: AuthDep):
-    """Render the candidates page - ONLY COMPANIES CAN ACCESS"""
     if user.role != 'company':
         raise HTTPException(
             status_code=403, 
@@ -28,18 +25,16 @@ async def candidates_page(request: Request, user: AuthDep):
     )
 
 
-# API - Get student profile details including resume
+
 @router.get("/api/candidates/student/{student_id}")
 async def get_student_profile(
     db: SessionDep,
     user: AuthDep,
     student_id: int
 ):
-    """Get detailed student profile including resume - for companies"""
     if user.role != 'company':
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Get student user
     student = db.get(User, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -47,13 +42,11 @@ async def get_student_profile(
     if student.role != 'student':
         raise HTTPException(status_code=400, detail="User is not a student")
     
-    # Get student profile
+
     student_profile = db.exec(
         select(StudentProfile).where(StudentProfile.userId == student_id)
     ).first()
     
-    # Get all applications by this student to company's programmes
-    # First get company's programme IDs
     company_programmes = db.exec(
         select(Programme).where(Programme.companyId == user.id)
     ).all()
@@ -73,7 +66,7 @@ async def get_student_profile(
             "application_id": app.id,
             "programme_title": programme.title,
             "status": app.status,
-            "applied_date": app.id  # You can add created_at field later
+            "applied_date": app.id  
         })
     
     return {
@@ -95,7 +88,6 @@ async def get_student_profile(
     }
 
 
-# API - Get candidates for a company's programmes
 @router.get("/api/candidates")
 async def get_candidates(
     db: SessionDep,
@@ -104,13 +96,12 @@ async def get_candidates(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=50)
 ):
-    """Get candidates for this company's programmes"""
+
     if user.role != 'company':
         raise HTTPException(status_code=403, detail="Access denied")
     
     offset = (page - 1) * limit
     
-    # Get all programmes for this company
     programmes = db.exec(
         select(Programme).where(Programme.companyId == user.id)
     ).all()
@@ -129,7 +120,6 @@ async def get_candidates(
             }
         }
     
-    # Get applications for these programmes (all statuses that are not pending)
     query = (
         select(Application, User, Programme, StudentProfile)
         .join(User, Application.userId == User.id)
@@ -143,7 +133,6 @@ async def get_candidates(
     if status and status != 'all':
         query = query.where(Application.status == status)
     
-    # Get total count
     count_query = select(func.count()).select_from(query.subquery())
     total_count = db.exec(count_query).one() or 0
     
@@ -173,17 +162,14 @@ async def get_candidates(
     }
 
 
-# API - Get statistics for company dashboard
 @router.get("/api/candidates/stats")
 async def get_candidates_stats(
     db: SessionDep,
     user: AuthDep
 ):
-    """Get statistics about candidates for this company"""
     if user.role != 'company':
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Get all programmes for this company
     programmes = db.exec(
         select(Programme).where(Programme.companyId == user.id)
     ).all()
@@ -198,8 +184,7 @@ async def get_candidates_stats(
             "waitlisted": 0,
             "total": 0
         }
-    
-    # Count by status
+
     shortlisted = db.exec(
         select(func.count()).select_from(Application).where(
             Application.programmeId.in_(programme_ids),
@@ -237,7 +222,6 @@ async def get_candidates_stats(
     }
 
 
-# API - Company updates candidate status (accept/reject/waitlist)
 @router.put("/api/candidates/{application_id}/status")
 async def update_candidate_status(
     db: SessionDep,
@@ -245,14 +229,12 @@ async def update_candidate_status(
     application_id: int,
     status: str
 ):
-    """Update candidate status (accept/reject/waitlist) - Can change anytime"""
     if user.role != 'company':
         raise HTTPException(status_code=403, detail="Access denied")
     
     if status not in ["accepted", "rejected", "waitlisted", "shortlisted"]:
         raise HTTPException(status_code=400, detail="Invalid status. Must be accepted, rejected, waitlisted, or shortlisted")
     
-    # Verify this application belongs to one of the company's programmes
     application = db.get(Application, application_id)
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -261,7 +243,6 @@ async def update_candidate_status(
     if programme.companyId != user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Update status (allow changes from any status)
     old_status = application.status
     application.status = status
     db.add(application)

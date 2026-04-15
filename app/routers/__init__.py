@@ -30,26 +30,11 @@ from . import candidates
 from . import my_applications
 from . import admin_candidates
 
-# Include profile router
 router.include_router(profile.router)
-
-# Include programmes HTML page on main router
 router.include_router(programmes.router)
-
-# Include candidates router (for HTML page)
 router.include_router(candidates.router)
-
-# Include my applications router (only accessible by students)
 router.include_router(my_applications.router)
-
-# Include admin candidates router (only accessible by admins)
 router.include_router(admin_candidates.router)
-
-# Include API routes from candidates (the /api/candidates endpoints)
 api_router.include_router(candidates.router)
-
-# Include API routes from api_programmes
 api_router.include_router(api_programmes.router)
-
-# Include applications API routes
 api_router.include_router(applications.router)

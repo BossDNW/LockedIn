@@ -10,7 +10,6 @@ router = APIRouter(tags=["Profile"])
 
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request, db: SessionDep, user: AuthDep):
-    """Display user profile based on role"""
     
     profile_data = None
     company_data = None
@@ -44,7 +43,6 @@ async def profile_page(request: Request, db: SessionDep, user: AuthDep):
 
 @router.get("/edit-profile", response_class=HTMLResponse)
 async def edit_profile_page(request: Request, db: SessionDep, user: AuthDep):
-    """Show edit profile form"""
     
     profile_data = None
     company_data = None
@@ -85,21 +83,17 @@ async def update_profile(
     username: str = Form(None),
     phone: str = Form(None),
     description: str = Form(None),
-    # Company-specific fields
     location: str = Form(None),
     website: str = Form(None),
-    profile_picture: str = Form(None)  # ← Changed to string for URL
+    profile_picture: str = Form(None)  
 ):
-    """Update user profile based on role"""
     
-    # Update User table (email) - applies to ALL roles
     db_user = db.exec(select(User).where(User.id == user.id)).one()
     
     if email and email != user.email:
         db_user.email = email
         db.add(db_user)
     
-    # Update profile based on role
     if user.role == 'student':
         profile = db.exec(select(StudentProfile).where(StudentProfile.userId == user.id)).first()
         if profile:
@@ -113,7 +107,6 @@ async def update_profile(
                 profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
         else:
-            # Create profile if doesn't exist
             profile = StudentProfile(
                 userId=user.id,
                 name=username or user.username,
@@ -125,7 +118,6 @@ async def update_profile(
             db.add(profile)
             
     elif user.role == 'company':
-        # Update CompanyProfile
         profile = db.exec(select(CompanyProfile).where(CompanyProfile.userId == user.id)).first()
         company = db.exec(select(Company).where(Company.id == user.id)).first()
         
@@ -144,7 +136,6 @@ async def update_profile(
                 profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
         else:
-            # Create profile if doesn't exist
             profile = CompanyProfile(
                 userId=user.id,
                 name=username or user.username,
@@ -177,7 +168,6 @@ async def update_profile(
                 profile.profilePicture = profile_picture if profile_picture else ""
             db.add(profile)
         else:
-            # Create profile if doesn't exist
             profile = AdminProfile(
                 userId=user.id,
                 name=username or user.username,

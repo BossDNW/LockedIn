@@ -17,13 +17,11 @@ async def programmes_page(
     user: AuthDep,
     id: int = None,
     search: str = None,
-    year: str = None,  # Changed from int to str
+    year: str = None,  
     field: str = None,
-    credits: str = None  # Changed from int to str
+    credits: str = None  
 ):
-    """Render the programmes page with data from database"""
     
-    # Convert year to int if provided and not empty
     year_filter = None
     if year and year.strip():
         try:
@@ -31,7 +29,6 @@ async def programmes_page(
         except ValueError:
             pass
     
-    # Convert credits to int if provided and not empty
     credits_filter = None
     if credits and credits.strip():
         try:
@@ -39,10 +36,8 @@ async def programmes_page(
         except ValueError:
             pass
     
-    # Build query with joins
     query = select(Programme, Company).join(Company, Programme.companyId == Company.id)
     
-    # Apply search filter
     if search:
         query = query.where(
             or_(
@@ -51,26 +46,20 @@ async def programmes_page(
             )
         )
     
-    # Apply year filter
     if year_filter:
         query = query.where(Programme.academicYear == year_filter)
     
-    # Apply field filter
     if field and field.strip():
         query = query.where(Programme.field == field)
     
-    # Apply credits filter
+
     if credits_filter:
         query = query.where(Programme.credits == credits_filter)
     
-    # Rest of your code remains the same...
-    # Execute query
     results = db.exec(query).all()
     
-    # Format programmes data for template
     programmes_list = []
     for programme, company in results:
-        # Parse keywords from JSON string
         keywords_list = []
         if programme.keywords and programme.keywords != "[]":
             try:
@@ -101,7 +90,6 @@ async def programmes_page(
             "days": programme.days
         })
     
-    # Get selected programme
     selected_programme = None
     if id:
         for p in programmes_list:
@@ -109,11 +97,9 @@ async def programmes_page(
                 selected_programme = p
                 break
     
-    # If no programme selected but we have programmes, select the first one
     if not selected_programme and programmes_list:
         selected_programme = programmes_list[0]
     
-    # Check if user has already applied to the selected programme
     has_applied = False
     if selected_programme and user.role == 'student':
         application = db.exec(
@@ -124,7 +110,6 @@ async def programmes_page(
         ).first()
         has_applied = application is not None
     
-    # Get unique filter options for dropdowns
     years = db.exec(select(Programme.academicYear).distinct()).all()
     fields = db.exec(select(Programme.field).distinct().where(Programme.field != "")).all()
     credits_list = db.exec(select(Programme.credits).distinct()).all()
@@ -138,9 +123,9 @@ async def programmes_page(
             "selected_programme": selected_programme,
             "has_applied": has_applied,
             "search_term": search or "",
-            "selected_year": year_filter,  # Pass the converted int or None
+            "selected_year": year_filter, 
             "selected_field": field or "",
-            "selected_credits": credits_filter,  # Pass the converted int or None
+            "selected_credits": credits_filter,
             "years": sorted(set(years)),
             "fields": sorted(set(fields)),
             "credits_list": sorted(set(credits_list))
@@ -225,20 +210,16 @@ async def edit_programme_page(
     db: SessionDep,
     user: AuthDep
 ):
-    """Show edit programme form (companies only)"""
     
-    # Check if user is a company
     if user.role != 'company':
         flash(request, "Only companies can edit programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Get the programme
     programme = db.get(Programme, programme_id)
     if not programme:
         flash(request, "Programme not found", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check if the programme belongs to the company
     if programme.companyId != user.id:
         flash(request, "You can only edit your own programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
@@ -274,25 +255,21 @@ async def update_programme(
     responsibilities: str = Form(None),
     requirements: str = Form(None)
 ):
-    """Update an existing programme"""
     
-    # Check if user is a company
     if user.role != 'company':
         flash(request, "Only companies can edit programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Get the programme
     programme = db.get(Programme, programme_id)
     if not programme:
         flash(request, "Programme not found", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check if the programme belongs to the company
+
     if programme.companyId != user.id:
         flash(request, "You can only edit your own programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check for duplicate programme (excluding current one)
     existing_programme = db.exec(
         select(Programme).where(
             Programme.title == title,
@@ -304,8 +281,7 @@ async def update_programme(
     if existing_programme:
         flash(request, f"A programme with the title '{title}' already exists for your company. Please use a different title.", "danger")
         return RedirectResponse(url=request.url_for("edit_programme_page", programme_id=programme_id), status_code=303)
-    
-    # Update programme fields
+   
     programme.title = title
     programme.numberOfPositions = int(number_of_positions) if number_of_positions else 1
     programme.academicYear = int(year_of_study) if year_of_study else 2024
@@ -335,25 +311,20 @@ async def delete_programme(
     db: SessionDep,
     user: AuthDep
 ):
-    """Delete a programme (companies only)"""
     
-    # Check if user is a company
     if user.role != 'company':
         flash(request, "Only companies can delete programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
-    
-    # Get the programme
+
     programme = db.get(Programme, programme_id)
     if not programme:
         flash(request, "Programme not found", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check if the programme belongs to the company
     if programme.companyId != user.id:
         flash(request, "You can only delete your own programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Delete the programme
     db.delete(programme)
     db.commit()
     
@@ -367,20 +338,16 @@ async def apply_to_programme(
     db: SessionDep,
     user: AuthDep
 ):
-    """Apply to a programme (for students only)"""
     
-    # Check if user is a student
     if user.role != 'student':
         flash(request, "Only students can apply to programmes", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check if programme exists
     programme = db.get(Programme, programme_id)
     if not programme:
         flash(request, "Programme not found", "danger")
         return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
     
-    # Check if already applied
     existing_application = db.exec(
         select(Application).where(
             Application.userId == user.id,
@@ -390,11 +357,9 @@ async def apply_to_programme(
     
     if existing_application:
         flash(request, f"You have already applied to '{programme.title}'", "warning")
-        # Preserve the current page parameters
         redirect_url = f"/programmes?id={programme_id}"
         return RedirectResponse(url=redirect_url, status_code=303)
     
-    # Create application
     new_application = Application(
         userId=user.id,
         programmeId=programme_id,
@@ -406,6 +371,5 @@ async def apply_to_programme(
     
     flash(request, f"Successfully applied to '{programme.title}'!", "success")
     
-    # Redirect back to the programme page with the selected programme highlighted
     redirect_url = f"/programmes?id={programme_id}"
     return RedirectResponse(url=redirect_url, status_code=303)

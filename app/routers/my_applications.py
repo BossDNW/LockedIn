@@ -1,5 +1,3 @@
-# app/routers/my_applications.py
-
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlmodel import select, join
@@ -12,7 +10,6 @@ router = APIRouter(tags=["My Applications"])
 
 @router.get("/my-applications", response_class=HTMLResponse)
 async def my_applications_page(request: Request, user: AuthDep):
-    """Render the my applications page - ONLY STUDENTS CAN ACCESS"""
     if user.role != 'student':
         raise HTTPException(
             status_code=403, 
@@ -31,24 +28,20 @@ async def get_my_applications(
     db: SessionDep,
     user: AuthDep
 ):
-    """API endpoint to get student's applications"""
     
-    # Only students can access
     if user.role != 'student':
         raise HTTPException(status_code=403, detail="Access denied")
-    
-    # Query applications with programme and company details
+
     query = (
         select(Application, Programme, Company)
         .join(Programme, Application.programmeId == Programme.id)
         .join(Company, Programme.companyId == Company.id)
         .where(Application.userId == user.id)
-        .order_by(Application.id.desc())  # Most recent first
+        .order_by(Application.id.desc()) 
     )
     
     results = db.exec(query).all()
     
-    # Format the response
     applications = []
     for app, programme, company in results:
         applications.append({
@@ -60,7 +53,7 @@ async def get_my_applications(
             "schedule": programme.schedule,
             "work_site": programme.workSite,
             "status": app.status,
-            "applied_date": app.id,  # You can add a created_at field to Application model
+            "applied_date": app.id, 
             "description": programme.description
         })
     
@@ -72,12 +65,10 @@ async def get_application_stats(
     db: SessionDep,
     user: AuthDep
 ):
-    """API endpoint to get application statistics"""
     
     if user.role != 'student':
         raise HTTPException(status_code=403, detail="Access denied")
-    
-    # Count applications by status
+
     pending = db.exec(
         select(Application).where(
             Application.userId == user.id,
@@ -121,12 +112,10 @@ async def withdraw_application(
     db: SessionDep,
     user: AuthDep
 ):
-    """Withdraw an application"""
     
     if user.role != 'student':
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Find the application
     application = db.exec(
         select(Application).where(
             Application.id == application_id,
@@ -137,11 +126,9 @@ async def withdraw_application(
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     
-    # Only allow withdrawal if status is pending
     if application.status != "pending":
         raise HTTPException(status_code=400, detail="Cannot withdraw application at this stage")
-    
-    # Delete or update status to withdrawn
+
     db.delete(application)
     db.commit()
     

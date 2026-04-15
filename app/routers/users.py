@@ -8,7 +8,6 @@ from app.utilities.flash import flash
 from app.schemas import UserResponse
 
 
-# API endpoint for listing users
 @api_router.get("/users", response_model=list[UserResponse])
 async def list_users(request: Request, db: SessionDep):
     user_repo = UserRepository(db)

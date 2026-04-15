@@ -1,11 +1,8 @@
-# app/utilities/seed_db.py
-
 from sqlmodel import Session, select
 from app.utilities.security import encrypt_password
 from app.models.user import User, StudentProfile, CompanyProfile, AdminProfile, Company
 
 def create_admin_user(db: Session):
-    """Create admin user if it doesn't exist"""
     
     admin = db.exec(select(User).where(User.username == "Sally")).first()
     
@@ -42,7 +39,6 @@ def create_admin_user(db: Session):
 
 
 def create_company_user(db: Session):
-    """Create company user if it doesn't exist"""
     
     company = db.exec(select(User).where(User.username == "Microzon")).first()
     
@@ -92,7 +88,6 @@ def create_company_user(db: Session):
 
 
 def create_student_user(db: Session):
-    """Create student user if it doesn't exist"""
     
     student = db.exec(select(User).where(User.username == "bob")).first()
     
@@ -130,7 +125,6 @@ def create_student_user(db: Session):
 
 
 def seed_database(db: Session):
-    """Seed all necessary data"""
     print("\n🔧 Seeding database with default users...")
     
     try:
