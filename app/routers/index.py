@@ -14,8 +14,8 @@ async def index_view(
     if user_logged_in:
         user = await get_current_user(request, db)
         if await is_admin(user):
-            return RedirectResponse(url=request.url_for('admin_home_view'), status_code=status.HTTP_303_SEE_OTHER)
-        return RedirectResponse(url=request.url_for('user_home_view'), status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url=request.url_for('profile_page'), status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url=request.url_for('profile_page'), status_code=status.HTTP_303_SEE_OTHER)
     response = RedirectResponse(url=request.url_for('login_view'), status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie(
         key="access_token", 
