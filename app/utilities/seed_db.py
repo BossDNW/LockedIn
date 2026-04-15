@@ -13,7 +13,7 @@ def create_admin_user(db: Session):
         admin_user = User(
             username="Sally",
             email="sally@lockedin.com",
-            password=encrypt_password("SallyPass"),
+            password=encrypt_password("sallypass"),
             role="admin"
         )
         db.add(admin_user)
@@ -31,7 +31,7 @@ def create_admin_user(db: Session):
         db.add(admin_profile)
         db.commit()
         
-        print("✓ Admin user created (Sally/SallyPass)")
+        print("✓ Admin user created (Sally/sallypass)")
     else:
         print("ℹ Admin user already exists")
 
@@ -39,7 +39,7 @@ def create_admin_user(db: Session):
 def create_company_user(db: Session):
     """Create company user if it doesn't exist"""
     
-    company = db.exec(select(User).where(User.username == "GoodEats")).first()
+    company = db.exec(select(User).where(User.username == "Microzon")).first()
     
     if not company:
         company_user = User(
