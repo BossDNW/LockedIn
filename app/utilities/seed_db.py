@@ -10,27 +10,18 @@ def create_admin_user(db: Session):
     # Check if admin already exists
     admin = db.exec(select(User).where(User.username == "Sally")).first()
     
-    if admin:
-        print("ℹ Admin user already exists")
-        return admin
-    
-    # Create admin user
-    admin_user = User(
-        username="Sally",
-        email="sally@lockedin.com",
-        password=encrypt_password("sallypass"),
-        role="admin"
-    )
-    db.add(admin_user)
-    db.flush()  # Flush to get the ID without committing
-    db.refresh(admin_user)
-    
-    # Check if admin profile already exists
-    admin_profile = db.exec(
-        select(AdminProfile).where(AdminProfile.userId == admin_user.id)
-    ).first()
-    
-    if not admin_profile:
+    if not admin:
+        admin_user = User(
+            username="Sally",
+            email="sally@lockedin.com",
+            password=encrypt_password("sallypass"),
+            role="admin"
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        
+        # Create admin profile
         admin_profile = AdminProfile(
             userId=admin_user.id,
             name="Sally Admin",
@@ -39,16 +30,17 @@ def create_admin_user(db: Session):
             profilePicture=""
         )
         db.add(admin_profile)
-    
-    print("✓ Admin user created (Sally/SallyPass)")
-    return admin_user
+        db.commit()
+        
+        print("✓ Admin user created (Sally/sallypass)")
+    else:
+        print("ℹ Admin user already exists")
 
 
 def create_company_user(db: Session):
     """Create company user if it doesn't exist"""
     
-    # Check if company already exists
-    company = db.exec(select(User).where(User.username == "GoodEats")).first()
+    company = db.exec(select(User).where(User.username == "Microzon")).first()
     
     if company:
         print("ℹ Company user already exists")
