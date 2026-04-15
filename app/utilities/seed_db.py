@@ -43,9 +43,9 @@ def create_company_user(db: Session):
     
     if not company:
         company_user = User(
-            username="GoodEats",
-            email="goodeats@restaurant.com",
-            password=encrypt_password("eatspass"),
+            username="Microzon",
+            email="microzon@company.com",
+            password=encrypt_password("micropass"),
             role="company"
         )
         db.add(company_user)
@@ -55,24 +55,24 @@ def create_company_user(db: Session):
         # Create company record
         company_record = Company(
             id=company_user.id,
-            name="GoodEats Restaurant"
+            name="Microzon Technologies"
         )
         db.add(company_record)
         
         # Create company profile
         company_profile = CompanyProfile(
             userId=company_user.id,
-            name="GoodEats Restaurant",
-            contact="contact@goodeats.com",
-            bio="We serve delicious food made with fresh ingredients!",
+            name="Microzon Technologies",
+            contact="contact@microzon.com",
+            bio="Innovative technology company specializing in software solutions!",
             profilePicture="",
             location="123 Main Street, Cityville",
-            website="www.goodeats.com"
+            website="www.microzon.com"
         )
         db.add(company_profile)
         db.commit()
         
-        print("✓ Company user created (GoodEats/eatspass)")
+        print("✓ Company user created (Microzon/micropass)")
     else:
         print("ℹ Company user already exists")
 
