@@ -43,7 +43,7 @@
                    class="master-link">
                     <div class="item-content">
                         <h2>{{ programme.programme_title }}</h2>
-                        <p>{{ programme.company_name }}, {{ programme.company_location }}</p>
+                        <p>{{ programme.company_name }}</p>
                         <div class="tags">
                             <span>📅 {{ programme.academic_year }}</span>
                             <span>🎓 {{ programme.field }}</span>
@@ -63,7 +63,7 @@
             {% if selected_programme %}
             <div class="detail-view">
                 <h2>{{ selected_programme.programme_title }}</h2>
-                <p class="company-info">{{ selected_programme.company_name }}, {{ selected_programme.company_location }}</p>
+                <p class="company-info">{{ selected_programme.company_name }}</p>
                 
                 <div class="programme-meta">
                     <span>📅 {{ selected_programme.academic_year }}</span>
@@ -72,9 +72,12 @@
                     <span>💰 {{ selected_programme.compensation }}</span>
                     <span>⏰ {{ selected_programme.schedule }}</span>
                     <span>📍 {{ selected_programme.workSite }}</span>
+                    <span>👥 {{ selected_programme.numberOfPositions }} positions</span>
+                    <span>⏱️ {{ selected_programme.hours }} hrs/week</span>
+                    <span>📆 {{ selected_programme.days }} days/week</span>
                 </div>
                 
-                {% if selected_programme.keywords %}
+                {% if selected_programme.keywords_list %}
                 <div class="keywords">
                     <strong>Keywords:</strong>
                     {% for keyword in selected_programme.keywords_list %}
@@ -85,21 +88,25 @@
                 
                 <div class="description">
                     <h3>Position Overview</h3>
-                    <p>{{ selected_programme.overview or selected_programme.description }}</p>
+                    <p>{{ selected_programme.description or 'No description provided.' }}</p>
                     
+                    {% if selected_programme.responsibilities %}
                     <h3>Responsibilities</h3>
-                    <p>{{ selected_programme.responsibilities or 'No specific responsibilities listed.' }}</p>
+                    <p>{{ selected_programme.responsibilities }}</p>
+                    {% endif %}
                     
+                    {% if selected_programme.requirements %}
                     <h3>Requirements</h3>
-                    <p>{{ selected_programme.requirements or 'No specific requirements listed.' }}</p>
+                    <p>{{ selected_programme.requirements }}</p>
+                    {% endif %}
                 </div>
                 
                 {% if user.role == 'student' %}
                     {% if has_applied %}
                         <button class="applied-btn" disabled>✓ Already Applied</button>
                     {% else %}
-                        <form method="post" action="/apply/{{ selected_programme.id }}" style="display: inline;">
-                            <input type="hidden" name="redirect_url" value="{{ request.url.path }}?id={{ selected_programme.id }}">
+                        <form method="POST" action="/apply/{{ selected_programme.id }}" style="display: inline;">
+                            <input type="hidden" name="redirect_url" value="/programmes?id={{ selected_programme.id }}">
                             <button type="submit" class="apply-btn">Apply Now</button>
                         </form>
                     {% endif %}

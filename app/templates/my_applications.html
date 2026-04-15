@@ -28,6 +28,10 @@
         margin: 0 0 8px 0;
     }
     
+    .stat-card.total {
+        background: linear-gradient(135deg, #424242, #212121);
+    }
+    
     .applications-table {
         width: 100%;
         border-collapse: collapse;
@@ -42,6 +46,10 @@
     .applications-table th {
         background-color: #f5f5f5;
         font-weight: 600;
+    }
+    
+    .applications-table tr:hover {
+        background-color: #fafafa;
     }
     
     .status-badge {
@@ -93,6 +101,60 @@
     .browse-link:hover {
         text-decoration: underline;
     }
+    
+    .withdraw-btn {
+        background: none;
+        border: none;
+        color: #c62828;
+        cursor: pointer;
+        font-size: 12px;
+        padding: 4px 8px;
+        margin-left: 10px;
+        border-radius: 4px;
+    }
+    
+    .withdraw-btn:hover {
+        background-color: #ffebee;
+        text-decoration: underline;
+    }
+    
+    .view-programme {
+        color: #1565c0;
+        text-decoration: none;
+        font-size: 12px;
+        margin-left: 10px;
+    }
+    
+    .view-programme:hover {
+        text-decoration: underline;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .error-message {
+        text-align: center;
+        padding: 40px;
+        color: #c62828;
+    }
+    
+    @media (max-width: 768px) {
+        .applications-table {
+            font-size: 12px;
+        }
+        
+        .applications-table th, 
+        .applications-table td {
+            padding: 8px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -115,6 +177,10 @@
                 <h3 id="acceptedCount">0</h3>
                 <p>Accepted</p>
             </div>
+            <div class="stat-card total">
+                <h3 id="totalCount">0</h3>
+                <p>Total Applications</p>
+            </div>
         </div>
         
         <table class="applications-table">
@@ -123,11 +189,13 @@
                     <th>Programme Title</th>
                     <th>Company</th>
                     <th>Compensation</th>
+                    <th>Schedule</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="applications-tbody">
-                <tr><td colspan="4" style="text-align: center;">Loading...</td\(�
+                <tr><td colspan="6" class="loading">Loading your applications...</td></tr>
             </tbody>
         </table>
         
@@ -136,35 +204,101 @@
 </div>
 
 <script>
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/application-stats');
+            const stats = await response.json();
+            
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('shortlistedCount').textContent = stats.shortlisted;
+            document.getElementById('acceptedCount').textContent = stats.accepted;
+            document.getElementById('totalCount').textContent = stats.total;
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+    
     async function loadMyApplications() {
         try {
             const response = await fetch('/api/my-applications');
             const applications = await response.json();
             
-            const pending = applications.filter(app => app.status === 'pending').length;
-            const shortlisted = applications.filter(app => app.status === 'shortlisted').length;
-            const accepted = applications.filter(app => app.status === 'accepted').length;
-            
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('shortlistedCount').textContent = shortlisted;
-            document.getElementById('acceptedCount').textContent = accepted;
-            
             const tbody = document.getElementById('applications-tbody');
+            
             if (applications.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">You haven\'t applied to any programmes yet. <a href="/programmes" style="color: #1565c0;">Browse Programmes →</a></td\(�';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            You haven't applied to any programmes yet.<br>
+                            <a href="/programmes" style="color: #1565c0; margin-top: 10px; display: inline-block;">Browse Programmes →</a>
+                        </td>
+                    </tr>
+                `;
             } else {
                 tbody.innerHTML = applications.map(app => `
                     <tr>
-                        <td><strong>${escapeHtml(app.programme_title)}</strong></td>
+                        <td>
+                            <strong>${escapeHtml(app.programme_title)}</strong>
+                            <br>
+                            <small>
+                                <a href="/programmes?id=${app.programme_id}" class="view-programme">View Programme</a>
+                            </small>
+                        </td>
                         <td>${escapeHtml(app.company_name)}</td>
                         <td>${escapeHtml(app.compensation || 'Not specified')}</td>
-                        <td><span class="status-badge status-${app.status}">${app.status}</span></td>
+                        <td>${escapeHtml(app.schedule || 'Not specified')}</td>
+                        <td>
+                            <span class="status-badge status-${app.status}">
+                                ${capitalizeFirst(app.status)}
+                            </span>
+                        </td>
+                        <td>
+                            ${app.status === 'pending' ? `
+                                <button onclick="withdrawApplication(${app.id})" class="withdraw-btn">
+                                    Withdraw
+                                </button>
+                            ` : ''}
+                        </td>
                     </tr>
                 `).join('');
             }
         } catch (error) {
             console.error('Error loading applications:', error);
-            document.getElementById('applications-tbody').innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading applications</td\(�';
+            document.getElementById('applications-tbody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="error-message">
+                        Error loading applications. Please refresh the page.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    async function withdrawApplication(applicationId) {
+        if (!confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/withdraw-application/${applicationId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Refresh both stats and applications
+                await loadStats();
+                await loadMyApplications();
+                alert('Application withdrawn successfully');
+            } else {
+                const error = await response.json();
+                alert(error.detail || 'Failed to withdraw application');
+            }
+        } catch (error) {
+            console.error('Error withdrawing application:', error);
+            alert('An error occurred while withdrawing the application');
         }
     }
     
@@ -175,9 +309,19 @@
         return div.innerHTML;
     }
     
+    function capitalizeFirst(text) {
+        if (!text) return '';
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+    
+    // Load data when page loads
+    loadStats();
     loadMyApplications();
     
     // Refresh every 30 seconds
-    setInterval(loadMyApplications, 30000);
+    setInterval(() => {
+        loadStats();
+        loadMyApplications();
+    }, 30000);
 </script>
 {% endblock %}

@@ -359,3 +359,53 @@ async def delete_programme(
     
     flash(request, f"Programme '{programme.title}' deleted successfully!", "success")
     return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
+
+@router.post("/apply/{programme_id}")
+async def apply_to_programme(
+    request: Request,
+    programme_id: int,
+    db: SessionDep,
+    user: AuthDep
+):
+    """Apply to a programme (for students only)"""
+    
+    # Check if user is a student
+    if user.role != 'student':
+        flash(request, "Only students can apply to programmes", "danger")
+        return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
+    
+    # Check if programme exists
+    programme = db.get(Programme, programme_id)
+    if not programme:
+        flash(request, "Programme not found", "danger")
+        return RedirectResponse(url=request.url_for("programmes_page"), status_code=303)
+    
+    # Check if already applied
+    existing_application = db.exec(
+        select(Application).where(
+            Application.userId == user.id,
+            Application.programmeId == programme_id
+        )
+    ).first()
+    
+    if existing_application:
+        flash(request, f"You have already applied to '{programme.title}'", "warning")
+        # Preserve the current page parameters
+        redirect_url = f"/programmes?id={programme_id}"
+        return RedirectResponse(url=redirect_url, status_code=303)
+    
+    # Create application
+    new_application = Application(
+        userId=user.id,
+        programmeId=programme_id,
+        status="pending"
+    )
+    
+    db.add(new_application)
+    db.commit()
+    
+    flash(request, f"Successfully applied to '{programme.title}'!", "success")
+    
+    # Redirect back to the programme page with the selected programme highlighted
+    redirect_url = f"/programmes?id={programme_id}"
+    return RedirectResponse(url=redirect_url, status_code=303)
