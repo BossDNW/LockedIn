@@ -7,34 +7,38 @@ from app.models.user import User, StudentProfile, CompanyProfile, AdminProfile, 
 def create_admin_user(db: Session):
     """Create admin user if it doesn't exist"""
     
-    # Check if admin already exists
     admin = db.exec(select(User).where(User.username == "Sally")).first()
     
-    if not admin:
-        admin_user = User(
-            username="Sally",
-            email="sally@lockedin.com",
-            password=encrypt_password("sallypass"),
-            role="admin"
-        )
-        db.add(admin_user)
-        db.commit()
-        db.refresh(admin_user)
-        
-        # Create admin profile
+    if admin:
+        print("ℹ Admin user already exists")
+        return admin
+    
+    admin_user = User(
+        username="Sally",
+        email="sally@lockedin.com",
+        password=encrypt_password("sallypass"),
+        role="admin"
+    )
+    db.add(admin_user)
+    db.flush()
+    db.refresh(admin_user)
+    
+    admin_profile = db.exec(
+        select(AdminProfile).where(AdminProfile.userId == admin_user.id)
+    ).first()
+    
+    if not admin_profile:
         admin_profile = AdminProfile(
             userId=admin_user.id,
             name="Sally Admin",
-            contact="+1(868)555-1234",
+            contact="+1(868) 123-4567", 
             bio="System Administrator",
             profilePicture=""
         )
         db.add(admin_profile)
-        db.commit()
-        
-        print("✓ Admin user created (Sally/sallypass)")
-    else:
-        print("ℹ Admin user already exists")
+    
+    print("✓ Admin user created (Sally/SallyPass)")
+    return admin_user
 
 
 def create_company_user(db: Session):
@@ -46,18 +50,16 @@ def create_company_user(db: Session):
         print("ℹ Company user already exists")
         return company
     
-    # Create company user
     company_user = User(
-        username="GoodEats",
-        email="goodeats@restaurant.com",
-        password=encrypt_password("eatspass"),
+        username="Microzon", 
+        email="microzon@company.com",  
+        password=encrypt_password("micropass"),  
         role="company"
     )
     db.add(company_user)
-    db.flush()  # Flush to get the ID without committing
+    db.flush()
     db.refresh(company_user)
     
-    # Check if company record already exists
     company_record = db.exec(
         select(Company).where(Company.id == company_user.id)
     ).first()
@@ -65,11 +67,10 @@ def create_company_user(db: Session):
     if not company_record:
         company_record = Company(
             id=company_user.id,
-            name="GoodEats Restaurant"
+            name="Microzon Technologies" 
         )
         db.add(company_record)
     
-    # Check if company profile already exists
     company_profile = db.exec(
         select(CompanyProfile).where(CompanyProfile.userId == company_user.id)
     ).first()
@@ -77,30 +78,28 @@ def create_company_user(db: Session):
     if not company_profile:
         company_profile = CompanyProfile(
             userId=company_user.id,
-            name="GoodEats Restaurant",
-            contact="+1(868)555-5678",
-            bio="We serve delicious food made with fresh ingredients!",
+            name="Microzon Technologies",
+            contact="+1(868) 456-7890",  
+            bio="Leading technology solutions provider specializing in innovative software development and IT consulting services.",
             profilePicture="",
-            location="123 Main Street, Cityville",
-            website="www.goodeats.com"
+            location="Port of Spain, Trinidad and Tobago",
+            website="www.microzon.com"
         )
         db.add(company_profile)
     
-    print("✓ Company user created (GoodEats/eatspass)")
+    print("✓ Company user created (Microzon/micropass)")
     return company_user
 
 
 def create_student_user(db: Session):
     """Create student user if it doesn't exist"""
     
-    # Check if student already exists
     student = db.exec(select(User).where(User.username == "bob")).first()
     
     if student:
         print("ℹ Student user already exists")
         return student
     
-    # Create student user
     student_user = User(
         username="bob",
         email="bob.student@university.com",
@@ -108,10 +107,9 @@ def create_student_user(db: Session):
         role="student"
     )
     db.add(student_user)
-    db.flush()  # Flush to get the ID without committing
+    db.flush()
     db.refresh(student_user)
     
-    # Check if student profile already exists
     student_profile = db.exec(
         select(StudentProfile).where(StudentProfile.userId == student_user.id)
     ).first()
@@ -120,8 +118,8 @@ def create_student_user(db: Session):
         student_profile = StudentProfile(
             userId=student_user.id,
             name="Bob Student",
-            contact="+1(868)555-9012",
-            bio="Computer Science student passionate about programming",
+            contact="+1(868) 789-0123",  
+            bio="Computer Science student passionate about programming and looking for internship opportunities.",
             profilePicture="",
             resume=""
         )
